@@ -1,0 +1,8 @@
+# Dependências do Sistema de Controle Financeiro Rural (N2 - Etapa 1)
+# Instalação: pip install -r requirements.txt
+
+Django>=5.0.0
+google-genai>=2.0.0
+pypdf>=5.0.0
+python-dotenv>=1.0.0
+requests>=2.28.0

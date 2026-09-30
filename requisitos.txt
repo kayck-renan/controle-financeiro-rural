@@ -1,0 +1,17 @@
+Linguagens (3 disponíveis)
+
+. Python
+· JavaScript
+. TypeScript
+
+Framewors
+
+DJANGO/Flash
+Node
+
+.
+
+SGBD
+
+PostGree
+MySQL

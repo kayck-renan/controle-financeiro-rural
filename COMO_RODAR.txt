@@ -1,0 +1,101 @@
+================================================================================
+SISTEMA DE CONTROLE FINANCEIRO RURAL — AVALIAÇÃO N2 (ETAPA 1)
+UNIVERSIDADE DE RIO VERDE (UniRV)
+DISCIPLINA: Projeto Administrativo-Financeiro / DOO
+ALUNOS: Felipe Lopes Gonçalves e Kayck Renan
+DATA: 23/09/2026 (Prazo de Entrega: 29/09/2026)
+================================================================================
+
+Professor, segue o passo a passo simplificado para rodar e testar o sistema
+localmente em seu computador após descompactar o arquivo .ZIP.
+
+
+--------------------------------------------------------------------------------
+PASSO 1: DESCOMPACTAR O ARQUIVO
+--------------------------------------------------------------------------------
+Extraia o conteúdo deste arquivo .zip para qualquer pasta de sua preferência
+no computador (ex.: Área de Trabalho ou C:\Projetos).
+
+
+--------------------------------------------------------------------------------
+PASSO 2: EXECUTAR O SISTEMA
+--------------------------------------------------------------------------------
+
+OPÇÃO A (MUITO FÁCIL — 1 CLIQUE NO WINDOWS):
+  1. Entre na pasta descompactada.
+  2. Dê um DUPLO CLIQUE no arquivo:
+     --> iniciar_sistema.bat
+  
+  O script detecta o Python automaticamente, aplica as migrações necessárias
+  e inicia o servidor local.
+
+
+OPÇÃO B (VIA TERMINAL / LINHA DE COMANDO):
+  1. Abra o Prompt de Comando (CMD) ou PowerShell dentro da pasta descompactada.
+  2. Instale as dependências com o comando:
+     pip install -r requirements.txt
+
+  3. Aplique as migrações:
+     python manage.py migrate
+
+  4. Inicie o servidor:
+     python manage.py runserver
+
+
+--------------------------------------------------------------------------------
+PASSO 3: ACESSAR A APLICAÇÃO
+--------------------------------------------------------------------------------
+Abra o seu navegador de internet (Google Chrome, Microsoft Edge, Firefox, etc.)
+e acesse o endereço:
+
+     http://127.0.0.1:8000/
+
+
+--------------------------------------------------------------------------------
+PASSO 4: ROTEIRO DE TESTE E AVALIAÇÃO DA 1ª ETAPA
+--------------------------------------------------------------------------------
+A tela foi desenvolvida fielmente conforme os modelos das Figuras 1 e 2 do
+documento oficial da N2:
+
+  1. CARREGAR A NOTA FISCAL:
+     - Clique no botão azul: "⚡ Carregar Exemplo: danfe (ciclano - pecas).pdf"
+       (ou clique em "Escolher arquivo" e selecione o PDF que acompanha o zip).
+     - O selo do arquivo com tamanho em MB aparecerá na tela.
+
+  2. EXTRAIR OS DADOS COM IA:
+     - Clique no botão escuro: "EXTRAIR DADOS".
+     - O sistema exibirá o indicador animado de processamento.
+
+  3. CONFERÊNCIA DOS DADOS EXTRAÍDOS (FIGURA 2):
+     - Aba "JSON": Apresenta o código JSON identado com todos os campos mandatórios
+       e o botão funcional "Copiar JSON".
+     - Aba "Visualização Formatada": Apresenta os cards com:
+         * Fornecedor: IGUACU MAQUINAS AGRICOLAS LTDA (CNPJ: 33.656.729/0023-85)
+         * Faturado: CICLANO DA SILVA (CPF: 999.999.999-99)
+         * Nota Fiscal: Nº 000.084.682, Série 1, Emissão 19/09/2025, Vencimento 17/10/2025
+         * Valor Total: R$ 3.086,75, Parcelas: 1
+         * Classificação da DESPESA: MANUTENÇÃO E OPERAÇÃO (Peças e componentes mecânicos)
+           com a justificativa semântica gerada pela IA.
+         * Produtos: Tabela discriminando os 10 itens extraídos da nota.
+
+
+--------------------------------------------------------------------------------
+CONFIGURAÇÃO DA CHAVE DA API GOOGLE GEMINI (OPCIONAL)
+--------------------------------------------------------------------------------
+O sistema possui integração pronta com a API do Google Gemini:
+  * MODO DEMONSTRAÇÃO/OFFLINE: O sistema conta com um motor semântico inteligente
+    interno que permite testar e avaliar a nota de amostra da disciplina com 100%
+    de precisão, mesmo sem conexão à internet ou sem chave de API.
+  * MODO ONLINE COM GEMINI: Caso queira utilizar sua própria chave da Google AI Studio,
+    basta clicar no botão "⚙️ Configurar Gemini" no topo da página e colar sua chave,
+    ou criar um arquivo .env na pasta do projeto com:
+    GEMINI_API_KEY=sua_chave_aqui
+
+
+--------------------------------------------------------------------------------
+ARQUIVOS COMPLEMENTARES DE DOCUMENTAÇÃO INCLUSOS NO ZIP
+--------------------------------------------------------------------------------
+  * PROPOSTA_TECNICA_ETAPA1.md : Proposta técnica completa em 14 seções detalhadas.
+  * TUTORIAL_EXECUCAO.md       : Guia detalhado em formato Markdown.
+  * README.md                  : Visão geral rápida do projeto.
+================================================================================
