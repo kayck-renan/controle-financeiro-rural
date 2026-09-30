@@ -102,6 +102,7 @@ OPCAO 2 - VIA TERMINAL / LINHA DE COMANDO:
 - Versionamento Git: Repositorio estruturado com historico de desenvolvimento.
 - GitHub: https://github.com/kayck-renan/controle-financeiro-rural
 - Usuario Vinculado: felipelopesgoncalves (Colaborador com acesso direto de escrita)
-- Hospedagem Vercel: Deploy configurado e integrado ao repositorio.
+- Hospedagem Vercel: https://controle-financeiro-rural.vercel.app/
+  (Deploy em producao ativo, integrado ao repositorio e com SSL)
 
 ================================================================================
