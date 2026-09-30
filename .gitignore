@@ -27,3 +27,12 @@ Desktop.ini
 # Temporary files
 *.zip
 *.log
+
+# Vercel
+.vercel
+
+# Test scripts
+test_vercel.py
+
+# Agent configs
+.agents/
