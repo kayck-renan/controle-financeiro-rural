@@ -100,7 +100,8 @@ OPCAO 2 - VIA TERMINAL / LINHA DE COMANDO:
 6. VERSIONAMENTO E PUBLICACAO
 --------------------------------------------------------------------------------
 - Versionamento Git: Repositorio estruturado com historico de desenvolvimento.
-- GitHub: https://github.com/felipelopesgoncalves/controle-financeiro-rural
-- Usuario Vinculado: felipelopesgoncalves
+- GitHub: https://github.com/kayck-renan/controle-financeiro-rural
+- Usuario Vinculado: felipelopesgoncalves (Colaborador com acesso direto de escrita)
 - Hospedagem Vercel: Deploy configurado e integrado ao repositorio.
+
 ================================================================================
