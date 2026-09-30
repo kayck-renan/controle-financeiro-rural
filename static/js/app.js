@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const barApiKeyInput = document.getElementById('bar-api-key-input');
   const btnToggleBarEye = document.getElementById('btn-toggle-bar-eye');
   const btnEnviarChave = document.getElementById('btn-enviar-chave');
+  const btnDemoKey = document.getElementById('btn-demo-key');
   const btnLimparChaveBar = document.getElementById('btn-limpar-chave-bar');
   const typingLiveIndicator = document.getElementById('typing-live-indicator');
   const typingLiveText = document.getElementById('typing-live-text');
@@ -42,7 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnToggleModalEye = document.getElementById('btn-toggle-modal-eye');
   const modalRealtimeKeyPreview = document.getElementById('modal-realtime-key-preview');
   const btnSaveKey = document.getElementById('btn-save-key');
+  const btnModalDemoKey = document.getElementById('btn-modal-demo-key');
   const btnClearKey = document.getElementById('btn-clear-key');
+
+  const DEMO_API_KEY = 'AIzaSyDemoUniRV2026RuralFinancasKey99';
 
   let currentFile = null;
   let useSampleMode = false;
@@ -204,6 +208,21 @@ document.addEventListener('DOMContentLoaded', () => {
     btnEnviarChave.addEventListener('click', () => {
       const val = barApiKeyInput ? barApiKeyInput.value : '';
       enviarChave(val);
+    });
+  }
+
+  if (btnDemoKey) {
+    btnDemoKey.addEventListener('click', () => {
+      enviarChave(DEMO_API_KEY);
+      showToast('Chave de Demonstração UniRV preenchida e ativada em tempo real!');
+    });
+  }
+
+  if (btnModalDemoKey) {
+    btnModalDemoKey.addEventListener('click', () => {
+      enviarChave(DEMO_API_KEY);
+      modalConfig.classList.add('hidden');
+      showToast('Chave de Demonstração UniRV ativada em tempo real!');
     });
   }
 
