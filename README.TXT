@@ -26,15 +26,19 @@ O sistema consiste em um Extrator Fiscal Inteligente para o agronegocio:
 O acesso ao sistema e protegido por autenticacao. Para a apresentacao e correcao,
 utilize qualquer uma das seguintes credenciais ja cadastradas:
 
-Credencial 1 (Principal):
+Credencial 1 (Autor Kayck Renan):
+- Usuario (Login): kayck
+- Senha:           unirv2026
+
+Credencial 2 (Autor Felipe Lopes):
 - Usuario (Login): felipelopesgoncalves
 - Senha:           unirv2026
 
-Credencial 2 (Alternativa):
+Credencial 3 (Alternativa):
 - Usuario (Login): felipe
 - Senha:           unirv2026
 
-Credencial 3 (Administrador):
+Credencial 4 (Administrador):
 - Usuario (Login): admin
 - Senha:           admin123
 

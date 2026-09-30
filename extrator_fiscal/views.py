@@ -61,8 +61,9 @@ def index(request):
     caminho_exemplo = os.path.join(settings.BASE_DIR, "danfe (ciclano - pecas).pdf")
     tem_exemplo = os.path.exists(caminho_exemplo)
     
+    nome_usuario = request.user.get_full_name() or request.user.username
     context = {
-        "usuario_logado": request.user.username,
+        "usuario_logado": nome_usuario,
         "tem_chave_servidor": tem_chave_servidor,
         "tem_chave_ativa": tem_chave_ativa,
         "chave_mascarada": chave_mascarada,
