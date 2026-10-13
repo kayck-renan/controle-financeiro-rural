@@ -157,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const inputCpfCnpj = document.getElementById('pessoa-cpf-cnpj');
   const feedbackCpfCnpj = document.getElementById('feedback-cpf-cnpj');
   const inputTelefone = document.getElementById('pessoa-telefone');
+  const inputEmail = document.getElementById('pessoa-email');
   const feedbackEmail = document.getElementById('feedback-email');
   // Inicializa máscaras automáticas
   if (window.RuralValidators) {
@@ -252,7 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pessoa-cpf-cnpj').value = '';
     document.getElementById('pessoa-tipo').value = 'FORNECEDOR';
     document.getElementById('pessoa-telefone').value = '';
-    document.getElementById('pessoa-email').value = '';
+    if (inputEmail) {
+      inputEmail.value = '';
+      inputEmail.classList.remove('input-error', 'input-success');
+    }
     document.getElementById('pessoa-status').value = 'ATIVO';
     if (feedbackCpfCnpj) feedbackCpfCnpj.innerHTML = '';
     if (feedbackEmail) feedbackEmail.innerHTML = '';
@@ -275,7 +279,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pessoa-cpf-cnpj').value = p.cpf_cnpj !== '-' ? p.cpf_cnpj : '';
     document.getElementById('pessoa-tipo').value = p.tipo;
     document.getElementById('pessoa-telefone').value = p.telefone !== '-' ? p.telefone : '';
-    document.getElementById('pessoa-email').value = p.email !== '-' ? p.email : '';
+    if (inputEmail) {
+      inputEmail.value = p.email !== '-' ? p.email : '';
+      inputEmail.classList.remove('input-error', 'input-success');
+    }
     if (feedbackCpfCnpj) feedbackCpfCnpj.innerHTML = '';
     if (feedbackEmail) feedbackEmail.innerHTML = '';
     if (window.RuralValidators && p.cpf_cnpj && p.cpf_cnpj !== '-') {
@@ -283,6 +290,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (window.RuralValidators && p.telefone && p.telefone !== '-') {
       inputTelefone.dispatchEvent(new Event('input'));
+    }
+    if (window.RuralValidators && inputEmail && inputEmail.value) {
+      inputEmail.dispatchEvent(new Event('input'));
     }
     modalPessoa.classList.remove('hidden');
   };

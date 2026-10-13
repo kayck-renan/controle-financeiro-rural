@@ -5,6 +5,10 @@
 > **Instituição:** Universidade de Rio Verde (UniRV)  
 > **Data de Entrega:** Outubro/2026  
 
+### 🌐 Links Oficiais do Projeto (Critério de Avaliação N2)
+- **Aplicação Publicada (Produção na Vercel):** [https://controle-financeiro-rural.vercel.app](https://controle-financeiro-rural.vercel.app)
+- **Repositório no GitHub:** [https://github.com/kayck-renan/controle-financeiro-rural](https://github.com/kayck-renan/controle-financeiro-rural)
+
 ---
 
 ## 📌 1. Visão Geral do Projeto
