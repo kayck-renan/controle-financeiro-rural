@@ -27,6 +27,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // =========================================================================
+  // MENU LATERAL RESPONSIVO (MOBILE OFFCANVAS)
+  // =========================================================================
+  const btnSidebarToggle = document.getElementById('btn-sidebar-toggle');
+  const appSidebar = document.getElementById('app-sidebar');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+  function toggleSidebar(open) {
+    if (!appSidebar) return;
+    const shouldOpen = open !== undefined ? open : !appSidebar.classList.contains('open');
+    if (shouldOpen) {
+      appSidebar.classList.add('open');
+      if (sidebarBackdrop) sidebarBackdrop.classList.add('show');
+    } else {
+      appSidebar.classList.remove('open');
+      if (sidebarBackdrop) sidebarBackdrop.classList.remove('show');
+    }
+  }
+
+  if (btnSidebarToggle) {
+    btnSidebarToggle.addEventListener('click', () => toggleSidebar());
+  }
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', () => toggleSidebar(false));
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && appSidebar && appSidebar.classList.contains('open')) {
+      toggleSidebar(false);
+    }
+  });
+
   // Elementos do DOM - Arquivo & Upload
   const fileInput = document.getElementById('file-input');
   const dropzone = document.getElementById('dropzone');
@@ -91,14 +122,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
 
   function atualizarStatusKeyInterface(ativo) {
+    const barIndicatorDot = document.getElementById('bar-indicator-dot');
     if (ativo) {
       if (keyLivePill) {
         keyLivePill.classList.add('active');
-        if (pillText) pillText.textContent = '🔒 Chave: Protegida (Ativa)';
+        if (pillText) pillText.textContent = 'Chave Protegida (Ativa)';
       }
       if (barStatusTag) {
-        barStatusTag.className = 'status-tag active';
-        barStatusTag.textContent = '✓ Chave Segura Ativa';
+        barStatusTag.className = 'badge badge-success';
+        barStatusTag.textContent = 'Chave Ativa';
+      }
+      if (barIndicatorDot) {
+        barIndicatorDot.className = 'status-indicator-dot active';
       }
       if (barLiveFeedback) {
         barLiveFeedback.textContent = 'Chave da API ativada no ambiente seguro. Oculta contra visualização indevida.';
@@ -106,14 +141,17 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       if (keyLivePill) {
         keyLivePill.classList.remove('active');
-        if (pillText) pillText.textContent = 'Modo Inteligente Local';
+        if (pillText) pillText.textContent = 'Modo Local';
       }
       if (barStatusTag) {
-        barStatusTag.className = 'status-tag local';
-        barStatusTag.textContent = 'Modo Local Resiliente';
+        barStatusTag.className = 'badge badge-neutral';
+        barStatusTag.textContent = 'Modo Local';
+      }
+      if (barIndicatorDot) {
+        barIndicatorDot.className = 'status-indicator-dot';
       }
       if (barLiveFeedback) {
-        barLiveFeedback.textContent = 'Nenhuma chave ativa. O sistema opera com o motor semântico inteligente local da UniRV.';
+        barLiveFeedback.textContent = 'Nenhuma chave ativa. O sistema opera com o motor semântico inteligente local.';
       }
     }
   }
@@ -450,7 +488,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Falha na comunicação ao lançar movimento');
       } finally {
         btnLancarMovimento.removeAttribute('disabled');
-        btnLancarMovimento.innerHTML = '<span>💾</span> <span>LANÇAR MOVIMENTO E PARCELAS NO BANCO DE DADOS (2ª ETAPA)</span>';
+        btnLancarMovimento.innerHTML = '<span>Lançar Movimento e Parcelas no Banco de Dados</span>';
       }
     });
   }

@@ -1,74 +1,53 @@
 {% extends "extrator_fiscal/base.html" %}
 {% load static %}
 
-{% block title %}Extrator Fiscal com IA & Análise 2ª Etapa | Controle Financeiro Rural{% endblock %}
+{% block title %}Extrator Fiscal | Controle Financeiro Rural{% endblock %}
 
 {% block content %}
-<div class="main-container" style="max-width: 1100px; margin: 0 auto;">
+<div class="content-container">
 
-  <!-- Hero Section & Indicador do GitHub -->
-  <section class="hero-section" style="margin-bottom: 1.5rem;">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom: 0.5rem;">
-      <h1 class="main-title" style="margin-bottom: 0;">Extração de Dados de Nota Fiscal & Análise no Banco</h1>
-      <div class="github-commit-badge" style="font-size:0.85rem; padding: 0.45rem 0.9rem;">
-        <span class="gh-icon">🐙</span>
-        <span class="gh-label">Código Última Atualização no GitHub:</span>
-        <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash">
-          <code>{{ git_commit_hash }}</code>
-        </a>
+  <!-- Cabeçalho da Página -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Extrator Fiscal</h1>
+      <p class="page-subtitle">Extração inteligente de dados da DANFE e conciliação contábil no banco de dados.</p>
+    </div>
+  </div>
+
+  <!-- Barra de Gestão da Chave (Compacta e Discreta) -->
+  <div class="card-compact-key" style="margin-bottom: 1.25rem;">
+    <div class="key-status-row">
+      <div class="key-status-indicator">
+        <span class="status-dot"></span>
+        <span id="bar-status-tag" class="key-status-badge">Chave Ativa</span>
+        <span id="bar-live-feedback" class="key-status-hint">Chave protegida no ambiente seguro.</span>
+      </div>
+      <div class="key-input-compact-group">
+        <input type="password" id="bar-api-key-input" class="key-compact-input" placeholder="Nova chave da API (••••••••••••••••)" autocomplete="off">
+        <button type="button" id="btn-enviar-chave" class="btn-sm btn-primary">Salvar</button>
+        <button type="button" id="btn-limpar-chave-bar" class="btn-sm btn-secondary" title="Remover chave">Limpar</button>
       </div>
     </div>
-    <p class="main-subtitle">
-      Carregue um PDF de DANFE para extração com IA e verificação automatizada de Fornecedor, Faturado e Despesa no Banco de Dados (2ª Etapa).
-    </p>
-  </section>
+  </div>
 
-  <!-- Barra de Gestão Segura da KEY (Oculta e Protegida) -->
-  <section class="key-management-bar card" style="margin-bottom: 1.5rem;">
-    <div class="key-bar-header">
-      <div class="key-bar-status-block">
-        <span class="key-bar-icon">🔒</span>
-        <div>
-          <div class="key-bar-title">
-            <strong>Proteção da Chave Google Gemini:</strong>
-            <span id="bar-status-tag" class="status-tag active">Chave Segura Ativa</span>
-          </div>
-          <div id="bar-live-feedback" class="key-bar-live-text">
-            Chave configurada e protegida no ambiente seguro. Oculta contra visualização externa.
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="key-bar-body">
-      <div class="key-input-row">
-        <div class="key-input-wrapper" style="flex:1;">
-          <input type="password" id="bar-api-key-input" class="key-bar-input" placeholder="Atualizar KEY confidencial (••••••••••••••••)" autocomplete="off">
-        </div>
-        <button type="button" id="btn-enviar-chave" class="btn-action-key btn-send">
-          <span>🔒 Salvar Chave Segura</span>
-        </button>
-        <button type="button" id="btn-limpar-chave-bar" class="btn-action-key btn-clear" title="Remover Chave">
-          <span>Limpar</span>
-        </button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Card de Upload de Arquivo PDF (DANFE) -->
-  <section class="upload-section card" style="margin-bottom: 1.5rem;">
-    <div class="upload-header">
-      <h2>Carregamento do Documento Fiscal (DANFE)</h2>
-      <p class="section-desc">Selecione ou arraste o arquivo PDF da nota fiscal de compra agrícola.</p>
+  <!-- Card de Upload de Arquivo (DANFE) -->
+  <div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-inner-header">
+      <h2 class="card-inner-title">Carregamento do Documento Fiscal</h2>
+      <p class="card-inner-desc">Selecione ou arraste o arquivo PDF da nota fiscal de compra agrícola.</p>
     </div>
 
     <!-- Dropzone / Drag and Drop -->
     <div id="dropzone" class="dropzone">
       <input type="file" id="file-input" accept="application/pdf" class="file-input-hidden">
       <div class="dropzone-content">
-        <div class="dropzone-icon">📄</div>
-        <p class="dropzone-text"><strong>Arraste e solte o PDF aqui</strong> ou clique para selecionar</p>
-        <span class="dropzone-hint">Formatos suportados: PDF (DANFE de compras agrícolas)</span>
+        <div class="dropzone-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+        </div>
+        <p class="dropzone-text"><strong>Clique para selecionar</strong> ou arraste o PDF aqui</p>
+        <span class="dropzone-hint">Formatos suportados: PDF (DANFE)</span>
       </div>
+
       <!-- Indicador de Arquivo Selecionado -->
       <div id="file-selected-badge" class="file-selected-badge hidden">
         <span class="badge-icon">✓</span>
@@ -80,96 +59,93 @@
       </div>
     </div>
 
-    <!-- Barra de Ações Rápidas -->
+    <!-- Barra de Ações de Upload -->
     <div class="upload-actions">
       {% if tem_exemplo %}
-      <button type="button" id="btn-use-sample" class="btn-sample" title="Carregar a nota fiscal modelo da disciplina">
+      <button type="button" id="btn-use-sample" class="btn-secondary" title="Carregar a nota fiscal modelo da disciplina">
         ⚡ Carregar Exemplo: danfe (ciclano - pecas).pdf
       </button>
       {% endif %}
 
-      <button type="button" id="btn-extrair" class="btn-extract" disabled>
-        ⚡ EXTRAIR DADOS & CONSULTAR BD
+      <button type="button" id="btn-extrair" class="btn-primary" disabled>
+        Extrair Dados & Consultar BD
       </button>
     </div>
-  </section>
+  </div>
 
   <!-- Indicador de Carregamento (Loading) -->
-  <section id="loading-indicator" class="loading-section card hidden">
+  <div id="loading-indicator" class="card loading-card hidden">
     <div class="spinner"></div>
     <div class="loading-text">
       <h3>Processando Documento Fiscal...</h3>
-      <p>Extraindo campos da DANFE, interpretando semântica e consultando Banco de Dados.</p>
+      <p>Extraindo dados da DANFE, interpretando semântica e consultando o banco de dados.</p>
     </div>
-    <div class="progress-bar-container">
-      <div class="progress-bar-fill"></div>
-    </div>
-  </section>
+  </div>
 
   <!-- ===================================================================== -->
   <!-- SEÇÃO DE RESULTADOS: ANÁLISE 2ª ETAPA + FORMATADO + JSON            -->
   <!-- ===================================================================== -->
-  <section id="results-section" class="results-section hidden">
+  <div id="results-section" class="hidden">
 
-    <!-- NOVO BLOCO DA 2ª ETAPA: CONSULTA DE EXISTÊNCIA NO BD (Página 2 do PDF) -->
-    <div class="analysis-etapa2-box" id="box-etapa2-analise">
-      <div class="analysis-etapa2-header">
-        <div class="analysis-title">
-          <span>🔍</span>
-          <span>Resultado da Consulta no Banco de Dados (2ª Etapa)</span>
+    <!-- PAINEL DA 2ª ETAPA: CONSULTA DE EXISTÊNCIA NO BD -->
+    <div class="card" id="box-etapa2-analise" style="margin-bottom: 1.5rem;">
+      <div class="card-inner-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+        <div>
+          <h2 class="card-inner-title">Resultado da Análise no Banco de Dados (2ª Etapa)</h2>
+          <p class="card-inner-desc">Verificação de existência de Fornecedor, Faturado e Despesa cadastrados.</p>
         </div>
-        <span class="tag-etapa" style="background:#dbeafe; color:#1e40af;">Conforme Especificação N2</span>
+        <span class="status-pill-subtle pill-income">Avaliação N2</span>
       </div>
 
       <div class="analysis-grid">
         <!-- Card 1: Fornecedor -->
         <div class="analysis-card" id="card-fornecedor-analise">
-          <div class="analysis-card-title">FORNECEDOR:</div>
+          <div class="analysis-card-title">FORNECEDOR</div>
           <div class="analysis-card-name" id="analise-forn-nome">Carregando...</div>
           <div class="analysis-card-doc" id="analise-forn-doc">CNPJ: -</div>
           <div>
-            <span class="analysis-status-pill" id="pill-forn-status">CONSULTANDO...</span>
+            <span class="status-pill-subtle" id="pill-forn-status">Consultando...</span>
           </div>
         </div>
 
         <!-- Card 2: Faturado -->
         <div class="analysis-card" id="card-faturado-analise">
-          <div class="analysis-card-title">FATURADO:</div>
+          <div class="analysis-card-title">FATURADO</div>
           <div class="analysis-card-name" id="analise-fat-nome">Carregando...</div>
           <div class="analysis-card-doc" id="analise-fat-doc">CPF: -</div>
           <div>
-            <span class="analysis-status-pill" id="pill-fat-status">CONSULTANDO...</span>
+            <span class="status-pill-subtle" id="pill-fat-status">Consultando...</span>
           </div>
         </div>
 
         <!-- Card 3: Despesa -->
         <div class="analysis-card" id="card-despesa-analise">
-          <div class="analysis-card-title">DESPESA:</div>
+          <div class="analysis-card-title">DESPESA</div>
           <div class="analysis-card-name" id="analise-desp-nome">Carregando...</div>
-          <div class="analysis-card-doc">Classificação Macrocategoria</div>
+          <div class="analysis-card-doc">Classificação Contábil</div>
           <div>
-            <span class="analysis-status-pill" id="pill-desp-status">CONSULTANDO...</span>
+            <span class="status-pill-subtle" id="pill-desp-status">Consultando...</span>
           </div>
         </div>
       </div>
 
-      <!-- Botão de Ação: Lançar Movimento no Sistema (Regra da Página 2) -->
-      <div style="margin-top: 1rem;">
-        <button type="button" id="btn-lancar-movimento-etapa2" class="btn-lancar-movimento">
-          <span>💾</span>
-          <span>LANÇAR MOVIMENTO E PARCELAS NO BANCO DE DADOS (2ª ETAPA)</span>
+      <!-- Botão de Ação: Lançar Movimento no Sistema -->
+      <div style="margin-top: 1.25rem;">
+        <button type="button" id="btn-lancar-movimento-etapa2" class="btn-primary" style="width:100%; justify-content:center; padding:0.75rem 1.25rem; font-size:0.92rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          <span>Lançar Movimento e Parcelas no Banco de Dados (2ª Etapa)</span>
         </button>
       </div>
 
       <!-- Feedback de Lançamento com Sucesso -->
-      <div id="box-sucesso-lancamento" class="launch-success-card hidden">
-        <h4>✓ REGISTRO LANÇADO COM SUCESSO!</h4>
-        <p id="msg-sucesso-detalhes" style="color:#166534; font-size:0.9rem; margin-bottom:0.75rem;"></p>
+      <div id="box-sucesso-lancamento" class="launch-success-card hidden" style="margin-top:1rem;">
+        <h4 style="color:#10b981; font-size:0.95rem; font-weight:700; margin-bottom:0.35rem;">✓ Registro Lançado com Sucesso!</h4>
+        <p id="msg-sucesso-detalhes" style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:0.75rem;"></p>
         <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-          <a href="{% url 'extrator_fiscal:contas_pagar' %}" class="btn-action-sm btn-edit" style="padding:0.5rem 1rem;">
+          <a href="{% url 'extrator_fiscal:contas_pagar' %}" class="btn-sm btn-primary">
             Ver em Contas a Pagar →
           </a>
-          <a href="{% url 'extrator_fiscal:pessoas' %}" class="btn-action-sm" style="background:#f1f5f9; color:#334155; padding:0.5rem 1rem;">
+          <a href="{% url 'extrator_fiscal:pessoas' %}" class="btn-sm btn-secondary">
             Ver em Pessoas Cadastradas
           </a>
         </div>
@@ -177,63 +153,60 @@
     </div>
 
     <!-- Abas Tradicionais da Etapa 1 -->
-    <div class="results-header card" style="margin-top:1.5rem;">
+    <div class="results-header-tabs">
       <div class="tabs-nav">
         <button type="button" class="tab-btn active" data-tab="tab-formatted">
-          📋 Visualização Formatada
+          Visualização Formatada
         </button>
         <button type="button" class="tab-btn" data-tab="tab-json">
-          💻 JSON
+          Payload JSON
         </button>
       </div>
 
       <div class="results-meta">
-        <div id="extraction-mode-badge" class="mode-badge ai">
-          <span class="mode-dot"></span>
+        <span id="extraction-mode-badge" class="status-pill-subtle pill-income">
           <span id="mode-text">Google Gemini Cloud AI</span>
-        </div>
+        </span>
       </div>
     </div>
 
     <!-- Aba 1: Visualização Formatada -->
     <div id="tab-formatted" class="tab-content active">
-      <!-- Status & Classificação -->
-      <div class="classification-banner card">
-        <div class="banner-icon">🏷️</div>
-        <div class="banner-content">
-          <span class="banner-tag">CLASSIFICAÇÃO SEMÂNTICA DA DESPESA (DOO UniRV)</span>
-          <h2 id="card-classificacao" class="banner-title">MANUTENÇÃO E OPERAÇÃO</h2>
-          <p id="card-justificativa" class="banner-desc">
+      <!-- Banner de Classificação Semântica -->
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="classification-compact-header">
+          <span class="section-title-sm">Classificação Semântica da Despesa</span>
+          <h3 id="card-classificacao" class="classification-main-title">MANUTENÇÃO E OPERAÇÃO</h3>
+          <p id="card-justificativa" class="classification-main-desc">
             Classificação contábil inferida a partir dos produtos e insumos discriminados na DANFE.
           </p>
         </div>
       </div>
 
-      <!-- Grid de Metadados -->
-      <div class="meta-grid">
-        <div class="meta-card card">
-          <span class="meta-label">NÚMERO DA NOTA</span>
-          <span id="card-numero-nf" class="meta-value">-</span>
+      <!-- Grid de Metadados da Nota -->
+      <div class="meta-grid" style="margin-bottom:1.25rem;">
+        <div class="metric-card">
+          <span class="metric-label">Número da Nota</span>
+          <span id="card-numero-nf" class="metric-value" style="font-size:1.3rem;">-</span>
         </div>
-        <div class="meta-card card">
-          <span class="meta-label">SÉRIE</span>
-          <span id="card-serie" class="meta-value">-</span>
+        <div class="metric-card">
+          <span class="metric-label">Série</span>
+          <span id="card-serie" class="metric-value" style="font-size:1.3rem;">-</span>
         </div>
-        <div class="meta-card card">
-          <span class="meta-label">DATA DE EMISSÃO</span>
-          <span id="card-emissao" class="meta-value">-</span>
+        <div class="metric-card">
+          <span class="metric-label">Emissão</span>
+          <span id="card-emissao" class="metric-value" style="font-size:1.3rem;">-</span>
         </div>
-        <div class="meta-card card">
-          <span class="meta-label">DATA DE VENCIMENTO</span>
-          <span id="card-vencimento" class="meta-value">-</span>
+        <div class="metric-card">
+          <span class="metric-label">Vencimento</span>
+          <span id="card-vencimento" class="metric-value" style="font-size:1.3rem;">-</span>
         </div>
       </div>
 
-      <!-- Seção Fornecedor e Faturado -->
-      <div class="parties-grid">
-        <div class="party-card card">
+      <!-- Cards de Emitente e Destinatário -->
+      <div class="parties-grid" style="margin-bottom:1.25rem;">
+        <div class="card party-card">
           <div class="party-header">
-            <span class="party-role-icon">🏢</span>
             <h3>Fornecedor (Emitente)</h3>
           </div>
           <div class="party-body">
@@ -247,14 +220,13 @@
             </div>
             <div class="party-field">
               <span class="field-label">CNPJ:</span>
-              <span id="card-fornecedor-cnpj" class="field-value mono">-</span>
+              <span id="card-fornecedor-cnpj" class="field-value cell-mono">-</span>
             </div>
           </div>
         </div>
 
-        <div class="party-card card">
+        <div class="card party-card">
           <div class="party-header">
-            <span class="party-role-icon">👤</span>
             <h3>Faturado (Destinatário)</h3>
           </div>
           <div class="party-body">
@@ -264,33 +236,34 @@
             </div>
             <div class="party-field">
               <span class="field-label">CPF:</span>
-              <span id="card-faturado-cpf" class="field-value mono">-</span>
+              <span id="card-faturado-cpf" class="field-value cell-mono">-</span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Resumo Financeiro -->
-      <div class="financial-summary card">
-        <div class="financial-item">
-          <span class="fin-label">QUANTIDADE DE PARCELAS</span>
-          <span id="card-parcelas" class="fin-value">1</span>
+      <!-- Resumo Financeiro da Nota -->
+      <div class="card" style="margin-bottom:1.25rem; padding:1.25rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+        <div>
+          <span class="metric-label">Quantidade de Parcelas</span>
+          <div id="card-parcelas" style="font-weight:700; color:var(--text-main); font-size:1.1rem; margin-top:0.2rem;">1</div>
         </div>
-        <div class="financial-divider"></div>
-        <div class="financial-item highlight">
-          <span class="fin-label">VALOR TOTAL DA NOTA</span>
-          <span id="card-valor-total" class="fin-value-total">R$ 0,00</span>
+        <div>
+          <span class="metric-label">Valor Total da Nota</span>
+          <div id="card-valor-total" class="cell-mono" style="font-size:1.5rem; font-weight:800; color:#10b981; margin-top:0.2rem;">R$ 0,00</div>
         </div>
       </div>
 
       <!-- Tabela de Produtos Discriminados -->
-      <div class="products-section card">
-        <div class="products-header">
-          <h3>Itens / Produtos Discriminados</h3>
-          <span id="products-count" class="products-count-badge">0 itens</span>
+      <div class="card-table" style="margin-bottom:1.5rem;">
+        <div class="card-table-header">
+          <div class="card-table-title-group">
+            <h3 class="card-table-title">Itens e Insumos Discriminados</h3>
+            <span id="products-count" class="card-table-sub">0 itens</span>
+          </div>
         </div>
         <div class="table-responsive">
-          <table class="products-table">
+          <table class="financial-table">
             <thead>
               <tr>
                 <th style="width: 50px;">#</th>
@@ -301,7 +274,7 @@
             </thead>
             <tbody id="products-table-body">
               <tr>
-                <td colspan="4" class="empty-table-msg">Nenhum produto processado.</td>
+                <td colspan="4" class="table-empty">Nenhum produto processado ainda.</td>
               </tr>
             </tbody>
           </table>
@@ -311,18 +284,18 @@
 
     <!-- Aba 2: JSON Bruto Estruturado -->
     <div id="tab-json" class="tab-content">
-      <div class="json-card card">
-        <div class="json-toolbar">
-          <span class="json-title">Payload JSON Serializado:</span>
-          <button type="button" id="btn-copy-json" class="btn-copy">
-            <span id="copy-btn-text">📋 Copiar JSON</span>
+      <div class="card json-container" style="padding:1.25rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+          <span class="section-title-sm">Payload JSON Estruturado:</span>
+          <button type="button" id="btn-copy-json" class="btn-sm btn-secondary">
+            <span id="copy-btn-text">Copiar JSON</span>
           </button>
         </div>
-        <pre class="json-pre"><code id="json-code-display" class="json-code">{}</code></pre>
+        <pre class="json-code-box"><code id="json-code-display" class="cell-mono">{}</code></pre>
       </div>
     </div>
 
-  </section>
+  </div>
 
 </div>
 {% endblock %}

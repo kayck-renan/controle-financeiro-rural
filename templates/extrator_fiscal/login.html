@@ -7,7 +7,7 @@
   <title>Acesso ao Sistema | Controle Financeiro Rural</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <script>
     (function() {
@@ -24,212 +24,177 @@
     })();
   </script>
   <style>
-    .login-container {
+    .login-wrapper {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at 15% 15%, #ecfdf5 0%, #f8fafc 45%, #f1f5f9 100%);
+      background: var(--bg-body);
       padding: 1.5rem;
       position: relative;
-      transition: background 0.3s ease;
     }
 
-    [data-theme="dark"] .login-container {
-      background: radial-gradient(circle at 15% 15%, #064e3b 0%, #0b0f19 50%, #06090e 100%);
-    }
-
-    .login-floating-theme {
+    .login-floating-actions {
       position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
+      top: 1.25rem;
+      right: 1.25rem;
       z-index: 10;
     }
 
-    .login-card-modern {
+    .login-card {
       width: 100%;
-      max-width: 420px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
-      padding: 2.5rem 2rem;
-      position: relative;
-      transition: all 0.3s ease;
+      max-width: 400px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 2rem;
+      box-shadow: var(--shadow-md);
+      transition: all var(--transition);
     }
 
-    [data-theme="dark"] .login-card-modern {
-      background: #111827;
-      border-color: #1f293d;
-      box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.6);
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
     }
 
-    .login-brand-badge {
+    .login-logo {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--primary);
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      background: #ecfdf5;
-      color: #047857;
-      font-size: 0.75rem;
-      font-weight: 700;
-      padding: 0.35rem 0.85rem;
-      border-radius: 9999px;
-      border: 1px solid #a7f3d0;
-      letter-spacing: 0.03em;
+      justify-content: center;
       margin-bottom: 1rem;
     }
 
-    [data-theme="dark"] .login-brand-badge {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border-color: rgba(16, 185, 129, 0.3);
-    }
-
-    .login-brand-title {
-      font-size: 1.45rem;
-      font-weight: 800;
-      color: #0f172a;
+    .login-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--text-main);
       letter-spacing: -0.02em;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.35rem;
     }
 
-    [data-theme="dark"] .login-brand-title {
-      color: #f8fafc;
-    }
-
-    .login-brand-sub {
-      font-size: 0.88rem;
-      color: #64748b;
-      margin-bottom: 2rem;
+    .login-sub {
+      font-size: 0.825rem;
+      color: var(--text-muted);
       line-height: 1.4;
     }
 
-    [data-theme="dark"] .login-brand-sub {
-      color: #94a3b8;
-    }
-
-    .login-field-group {
-      margin-bottom: 1.25rem;
-      text-align: left;
+    .login-form-group {
+      margin-bottom: 1.2rem;
     }
 
     .login-label {
       display: block;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 600;
-      color: #334155;
+      color: var(--text-muted);
       margin-bottom: 0.45rem;
-    }
-
-    [data-theme="dark"] .login-label {
-      color: #cbd5e1;
     }
 
     .login-input {
       width: 100%;
-      padding: 0.75rem 1rem;
-      font-size: 0.95rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      background: #ffffff;
-      color: #0f172a;
-      transition: all 0.2s ease;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.9rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-main);
       font-family: inherit;
-    }
-
-    [data-theme="dark"] .login-input {
-      background: #1e293b;
-      border-color: #334155;
-      color: #f8fafc;
+      transition: all var(--transition);
     }
 
     .login-input:focus {
       outline: none;
-      border-color: #059669;
-      box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
     }
 
-    .btn-submit-modern {
+    .btn-login {
       width: 100%;
-      padding: 0.85rem;
-      font-size: 0.95rem;
-      font-weight: 700;
+      margin-top: 1.5rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      background: var(--primary);
       color: #ffffff;
-      background: linear-gradient(135deg, #059669 0%, #047857 100%);
       border: none;
-      border-radius: 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
-      margin-top: 1.5rem;
+      transition: all var(--transition);
     }
 
-    .btn-submit-modern:hover {
-      background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(5, 150, 105, 0.35);
+    .btn-login:hover {
+      background: var(--primary-hover);
     }
 
-    .login-error-alert {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #b91c1c;
-      padding: 0.85rem 1rem;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      margin-bottom: 1.5rem;
+    .login-alert-error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      color: var(--danger);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.825rem;
+      margin-bottom: 1.25rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
-    [data-theme="dark"] .login-error-alert {
-      background: rgba(239, 68, 68, 0.15);
-      border-color: rgba(239, 68, 68, 0.3);
-      color: #fca5a5;
-    }
-
-    .login-card-footer {
+    .login-footer {
       margin-top: 2rem;
       padding-top: 1.25rem;
-      border-top: 1px solid #f1f5f9;
+      border-top: 1px solid var(--border-subtle);
       font-size: 0.75rem;
-      color: #94a3b8;
+      color: var(--text-muted);
       text-align: center;
       line-height: 1.5;
-    }
-
-    [data-theme="dark"] .login-card-footer {
-      border-top-color: #1f293d;
-      color: #64748b;
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <!-- Botão de Tema no Topo Direito -->
-    <div class="login-floating-theme">
-      <button id="btn-theme-toggle" class="btn-theme-toggle" type="button" title="Alternar entre modo claro e escuro" aria-label="Alternar Tema">
-        <span class="theme-icon theme-sun">☀️</span>
-        <span class="theme-icon theme-moon">🌙</span>
-        <span class="theme-toggle-text" id="theme-toggle-text">Tema</span>
+  <div class="login-wrapper">
+    <div class="login-floating-actions">
+      <button id="btn-theme-toggle" class="btn-theme-nav" type="button" title="Alternar tema" aria-label="Alternar tema">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
       </button>
     </div>
 
-    <div class="login-card-modern">
-      <div style="text-align: center;">
-        <span class="login-brand-badge">🌾 UniRV • DOO</span>
-        <h1 class="login-brand-title">Controle Financeiro Rural</h1>
-        <p class="login-brand-sub">Sistema de Gestão Fiscal e Financeira do Agronegócio</p>
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <h1 class="login-title">Controle Financeiro Rural</h1>
+        <p class="login-sub">Gestão fiscal e financeira integrada</p>
       </div>
 
       {% if erro %}
-      <div class="login-error-alert" role="alert">
-        <span>⚠️</span>
+      <div class="login-alert-error" role="alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
         <span>{{ erro }}</span>
       </div>
       {% endif %}
@@ -238,24 +203,28 @@
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ next_url }}">
 
-        <div class="login-field-group">
-          <label for="username" class="login-label">Usuário:</label>
+        <div class="login-form-group">
+          <label for="username" class="login-label">Usuário</label>
           <input type="text" id="username" name="username" class="login-input" placeholder="Digite seu usuário" required autofocus autocomplete="username">
         </div>
 
-        <div class="login-field-group">
-          <label for="password" class="login-label">Senha:</label>
+        <div class="login-form-group">
+          <label for="password" class="login-label">Senha</label>
           <input type="password" id="password" name="password" class="login-input" placeholder="Digite sua senha" required autocomplete="current-password">
         </div>
 
-        <button type="submit" class="btn-submit-modern" id="btn-login-submit">
-          <span>🔒 Entrar no Sistema</span>
+        <button type="submit" class="btn-login" id="btn-login-submit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Entrar no Sistema</span>
         </button>
       </form>
 
-      <div class="login-card-footer">
-        <strong>UniRV — Universidade de Rio Verde</strong><br>
-        Ambiente Seguro • Avaliação N2
+      <div class="login-footer">
+        UniRV — Universidade de Rio Verde<br>
+        Ambiente Seguro • DOO
       </div>
     </div>
   </div>
@@ -263,11 +232,10 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const toggleBtn = document.getElementById('btn-theme-toggle');
-      const textEl = document.getElementById('theme-toggle-text');
       function updateTheme(th) {
         document.documentElement.setAttribute('data-theme', th);
-        localStorage.setItem('rural_theme', th);
-        if (textEl) textEl.textContent = th === 'dark' ? 'Modo Escuro' : 'Modo Claro';
+        document.body.setAttribute('data-theme', th);
+        try { localStorage.setItem('rural_theme', th); } catch (e) {}
       }
       const cur = document.documentElement.getAttribute('data-theme') || 'light';
       updateTheme(cur);

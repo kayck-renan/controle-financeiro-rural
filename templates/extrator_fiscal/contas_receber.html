@@ -5,38 +5,25 @@
 {% block content %}
 <div style="max-width: 1200px; margin: 0 auto;">
 
-  <!-- Título da Seção -->
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+  <!-- Cabeçalho da Página -->
+  <div class="page-header">
     <div>
-      <h1 class="main-title" style="margin-bottom:0.25rem;">💵 Registrar Contas a Receber</h1>
-      <p style="color:#64748b; font-size:0.95rem;">Controle de receitas de vendas de grãos, safras, hortifrúti e serviços rurais.</p>
-    </div>
-
-    <!-- Badge do Commit do GitHub -->
-    <div class="github-commit-badge" style="font-size:0.85rem; padding: 0.45rem 0.9rem;">
-      <span class="gh-icon">🐙</span>
-      <span class="gh-label">Código Última Atualização no GitHub:</span>
-      <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash">
-        <code>{{ git_commit_hash }}</code>
-      </a>
+      <h1 class="page-title">Contas a Receber</h1>
+      <p class="page-subtitle">Controle de receitas de vendas de grãos, safras, hortifrúti e serviços rurais.</p>
     </div>
   </div>
 
-  <!-- Barra de Filtros e Busca (Página 4 do PDF) -->
+  <!-- Barra de Filtros e Busca -->
   <div class="crud-toolbar">
     <div class="crud-search-group">
-      <input type="text" id="input-busca-receber" class="crud-search-input" placeholder="Buscar por Nº do Documento, Cliente ou Descrição...">
-      <button type="button" id="btn-buscar-receber" class="btn-crud-buscar">
-        🔍 Buscar
-      </button>
-      <button type="button" id="btn-todos-receber" class="btn-crud-todos" title="Carrega todos com status = ATIVO">
-        📋 Todos (Ativos)
-      </button>
+      <input type="text" id="input-busca-receber" class="crud-search-input" placeholder="Buscar por documento, cliente ou descrição...">
+      <button type="button" id="btn-buscar-receber" class="btn-sm btn-primary">Buscar</button>
+      <button type="button" id="btn-todos-receber" class="btn-sm btn-secondary" title="Carrega todos com status = ATIVO">Todos (Ativos)</button>
     </div>
 
     <div>
-      <button type="button" id="btn-novo-receber" class="btn-crud-novo" style="background:#059669;">
-        ➕ Nova Conta a Receber
+      <button type="button" id="btn-novo-receber" class="btn-sm btn-primary">
+        + Nova Conta a Receber
       </button>
     </div>
   </div>

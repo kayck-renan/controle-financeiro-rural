@@ -5,43 +5,30 @@
 {% block content %}
 <div style="max-width: 1200px; margin: 0 auto;">
 
-  <!-- Título da Seção -->
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+  <!-- Cabeçalho da Página -->
+  <div class="page-header">
     <div>
-      <h1 class="main-title" style="margin-bottom:0.25rem;">🏷️ Manter Classificações</h1>
-      <p style="color:#64748b; font-size:0.95rem;">Categorias Contábeis de Despesas e Receitas Agrícolas (9 Macrocategorias da N2).</p>
-    </div>
-
-    <!-- Badge do Commit do GitHub -->
-    <div class="github-commit-badge" style="font-size:0.85rem; padding: 0.45rem 0.9rem;">
-      <span class="gh-icon">🐙</span>
-      <span class="gh-label">Código Última Atualização no GitHub:</span>
-      <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash">
-        <code>{{ git_commit_hash }}</code>
-      </a>
+      <h1 class="page-title">Classificações</h1>
+      <p class="page-subtitle">Categorias contábeis de despesas e receitas agrícolas.</p>
     </div>
   </div>
 
-  <!-- Barra de Filtros e Busca (Página 4 do PDF) -->
+  <!-- Barra de Filtros e Busca -->
   <div class="crud-toolbar">
     <div class="crud-search-group">
-      <input type="text" id="input-busca-class" class="crud-search-input" placeholder="Buscar por descrição ou detalhes da classificação...">
-      <select id="select-filtro-tipo-class" class="crud-search-input" style="max-width: 160px;">
+      <input type="text" id="input-busca-class" class="crud-search-input" placeholder="Buscar por descrição ou detalhes...">
+      <select id="select-filtro-tipo-class" class="crud-search-input" style="max-width: 150px;">
         <option value="">Todos os Tipos</option>
         <option value="DESPESA">Despesas</option>
         <option value="RECEITA">Receitas</option>
       </select>
-      <button type="button" id="btn-buscar-class" class="btn-crud-buscar">
-        🔍 Buscar
-      </button>
-      <button type="button" id="btn-todos-class" class="btn-crud-todos" title="Carrega todos com status = ATIVO">
-        📋 Todos (Ativos)
-      </button>
+      <button type="button" id="btn-buscar-class" class="btn-sm btn-primary">Buscar</button>
+      <button type="button" id="btn-todos-class" class="btn-sm btn-secondary" title="Carrega todos com status = ATIVO">Todos (Ativos)</button>
     </div>
 
     <div>
-      <button type="button" id="btn-novo-class" class="btn-crud-novo">
-        ➕ Inserir Nova Classificação
+      <button type="button" id="btn-novo-class" class="btn-sm btn-primary">
+        + Nova Classificação
       </button>
     </div>
   </div>

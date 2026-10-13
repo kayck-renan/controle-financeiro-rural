@@ -1,132 +1,142 @@
 {% extends "extrator_fiscal/base.html" %}
 
-{% block title %}Dashboard Financeiro Rural | UniRV{% endblock %}
+{% block title %}Dashboard | Controle Financeiro Rural{% endblock %}
 
 {% block content %}
-<div style="max-width: 1200px; margin: 0 auto;">
+<div class="content-container">
 
-  <!-- Hero Dashboard -->
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.75rem;">
+  <!-- Cabeçalho da Página -->
+  <div class="page-header">
     <div>
-      <h1 class="main-title" style="margin-bottom:0.25rem;">🌾 Painel de Controle Financeiro Rural</h1>
-      <p style="color:#64748b; font-size:0.95rem;">Visão gerencial de receitas, despesas, cadastros e lançamentos fiscais da propriedade.</p>
-    </div>
-
-    <!-- Badge do Commit do GitHub -->
-    <div class="github-commit-badge" style="font-size:0.85rem; padding: 0.45rem 0.9rem;">
-      <span class="gh-icon">🐙</span>
-      <span class="gh-label">Código Última Atualização no GitHub:</span>
-      <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash">
-        <code>{{ git_commit_hash }}</code>
-      </a>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Visão financeira e operacional da propriedade rural.</p>
     </div>
   </div>
 
-  <!-- Cards de Indicadores Financeiros -->
-  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1.25rem; margin-bottom:2rem;">
-    <!-- Contas a Pagar -->
-    <div class="card" style="border-left: 4px solid #ef4444;">
-      <div style="font-size:0.8rem; text-transform:uppercase; color:#64748b; font-weight:700;">Contas a Pagar (Ativas)</div>
-      <div style="font-size:1.6rem; font-weight:800; color:#b91c1c; margin:0.35rem 0;">R$ {{ total_pagar|floatformat:2 }}</div>
-      <div style="font-size:0.78rem; color:#94a3b8;">Despesas e compras agrícolas</div>
+  <!-- Cards de Indicadores Financeiros (4 Principais) -->
+  <div class="metric-grid">
+    <!-- Card 1: Contas a Pagar -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Contas a Pagar</span>
+        <span class="metric-tag tag-expense">Despesas</span>
+      </div>
+      <div class="metric-value value-expense">R$ {{ total_pagar|floatformat:2 }}</div>
+      <div class="metric-desc">Obrigações e compras pendentes</div>
     </div>
 
-    <!-- Contas a Receber -->
-    <div class="card" style="border-left: 4px solid #10b981;">
-      <div style="font-size:0.8rem; text-transform:uppercase; color:#64748b; font-weight:700;">Contas a Receber (Ativas)</div>
-      <div style="font-size:1.6rem; font-weight:800; color:#047857; margin:0.35rem 0;">R$ {{ total_receber|floatformat:2 }}</div>
-      <div style="font-size:0.78rem; color:#94a3b8;">Vendas de safras e serviços</div>
+    <!-- Card 2: Contas a Receber -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Contas a Receber</span>
+        <span class="metric-tag tag-income">Receitas</span>
+      </div>
+      <div class="metric-value value-income">R$ {{ total_receber|floatformat:2 }}</div>
+      <div class="metric-desc">Vendas de safras e recebíveis</div>
     </div>
 
-    <!-- Saldo Projetado -->
-    <div class="card" style="border-left: 4px solid {% if saldo >= 0 %}#3b82f6{% else %}#f59e0b{% endif %};">
-      <div style="font-size:0.8rem; text-transform:uppercase; color:#64748b; font-weight:700;">Saldo Operacional</div>
-      <div style="font-size:1.6rem; font-weight:800; color:{% if saldo >= 0 %}#1d4ed8{% else %}#b45309{% endif %}; margin:0.35rem 0;">
+    <!-- Card 3: Saldo Operacional -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Saldo Operacional</span>
+        <span class="metric-tag {% if saldo >= 0 %}tag-neutral{% else %}tag-warning{% endif %}">Diferença</span>
+      </div>
+      <div class="metric-value {% if saldo >= 0 %}value-balance-pos{% else %}value-balance-neg{% endif %}">
         R$ {{ saldo|floatformat:2 }}
       </div>
-      <div style="font-size:0.78rem; color:#94a3b8;">Receitas menos Despesas</div>
+      <div class="metric-desc">Receitas menos despesas</div>
     </div>
 
-    <!-- Pessoas Cadastradas -->
-    <div class="card" style="border-left: 4px solid #8b5cf6;">
-      <div style="font-size:0.8rem; text-transform:uppercase; color:#64748b; font-weight:700;">Pessoas Cadastradas</div>
-      <div style="font-size:1.6rem; font-weight:800; color:#6d28d9; margin:0.35rem 0;">{{ total_pessoas }}</div>
-      <div style="font-size:0.78rem; color:#94a3b8;">Fornecedores, Clientes e Faturados</div>
-    </div>
-  </div>
-
-  <!-- Ações Rápidas -->
-  <div class="card" style="margin-bottom: 2rem;">
-    <h3 style="font-size:1.05rem; font-weight:700; color:#0f172a; margin-bottom:1rem;">⚡ Ações e Módulos Rápidos</h3>
-    <div style="display:flex; flex-wrap:wrap; gap:0.75rem;">
-      <a href="{% url 'extrator_fiscal:index' %}" class="btn-crud-novo" style="background:#15803d; text-decoration:none;">
-        📄 Extrair DANFE (PDF)
-      </a>
-      <a href="{% url 'extrator_fiscal:contas_pagar' %}" class="btn-crud-novo" style="background:#2563eb; text-decoration:none;">
-        💳 Registrar Conta a Pagar
-      </a>
-      <a href="{% url 'extrator_fiscal:contas_receber' %}" class="btn-crud-novo" style="background:#059669; text-decoration:none;">
-        💵 Registrar Conta a Receber
-      </a>
-      <a href="{% url 'extrator_fiscal:pessoas' %}" class="btn-crud-novo" style="background:#475569; text-decoration:none;">
-        👥 Manter Pessoas
-      </a>
-      <a href="{% url 'extrator_fiscal:classificacoes' %}" class="btn-crud-novo" style="background:#6d28d9; text-decoration:none;">
-        🏷️ Manter Classificações
-      </a>
+    <!-- Card 4: Pessoas Cadastradas -->
+    <div class="metric-card">
+      <div class="metric-header">
+        <span class="metric-label">Pessoas Cadastradas</span>
+        <span class="metric-tag tag-neutral">Contatos</span>
+      </div>
+      <div class="metric-value">{{ total_pessoas }}</div>
+      <div class="metric-desc">Fornecedores, clientes e faturados</div>
     </div>
   </div>
 
-  <!-- Tabela de Últimos Movimentos Lançados -->
-  <div class="crud-table-card">
-    <div style="padding:1.1rem 1.4rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="font-size:1.05rem; font-weight:700; color:#0f172a;">📋 Últimos Movimentos Financeiros</h3>
-      <span style="font-size:0.8rem; color:#64748b;">Exibindo últimos registros ativos</span>
+  <!-- Seção Compacta: Ações Rápidas -->
+  <div class="quick-actions-container">
+    <div class="quick-actions-header">
+      <span class="quick-actions-title">Ações Rápidas</span>
+    </div>
+    <div class="quick-actions-list">
+      <!-- Ação Principal (Destaque sutil verde) -->
+      <a href="{% url 'extrator_fiscal:index' %}" class="btn-action-primary">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        <span>Extrair DANFE (PDF)</span>
+      </a>
+
+      <!-- Ações Secundárias (Discretas) -->
+      <a href="{% url 'extrator_fiscal:contas_pagar' %}" class="btn-action-secondary">
+        <span>+ Conta a Pagar</span>
+      </a>
+      <a href="{% url 'extrator_fiscal:contas_receber' %}" class="btn-action-secondary">
+        <span>+ Conta a Receber</span>
+      </a>
+      <a href="{% url 'extrator_fiscal:pessoas' %}" class="btn-action-secondary">
+        <span>Pessoas</span>
+      </a>
+      <a href="{% url 'extrator_fiscal:classificacoes' %}" class="btn-action-secondary">
+        <span>Classificações</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Tabela de Lançamentos Financeiros Recentes -->
+  <div class="card-table">
+    <div class="card-table-header">
+      <div class="card-table-title-group">
+        <h2 class="card-table-title">Últimos Movimentos Financeiros</h2>
+        <span class="card-table-sub">Registros ativos mais recentes</span>
+      </div>
     </div>
 
     <div class="table-responsive">
-      <table class="crud-table">
+      <table class="financial-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Tipo</th>
+            <th style="width: 70px;">ID</th>
+            <th style="width: 120px;">Tipo</th>
             <th>Pessoa / Parceiro</th>
-            <th>Doc / NF</th>
-            <th>Data Emissão</th>
+            <th style="width: 140px;">Documento</th>
+            <th style="width: 110px;">Emissão</th>
             <th>Classificação</th>
-            <th style="text-align:right;">Valor Total</th>
-            <th style="text-align:center;">Status</th>
+            <th style="width: 150px; text-align: right;">Valor Total</th>
+            <th style="width: 90px; text-align: center;">Status</th>
           </tr>
         </thead>
         <tbody>
           {% for m in ultimos_movimentos %}
           <tr>
-            <td><strong>#{{ m.id }}</strong></td>
+            <td class="cell-mono">#{{ m.id }}</td>
             <td>
-              <span class="badge-status {% if m.tipo == 'APAGAR' %}inativo{% else %}ativo{% endif %}" style="font-size:0.7rem;">
+              <span class="status-pill-subtle {% if m.tipo == 'APAGAR' %}pill-expense{% else %}pill-income{% endif %}">
                 {{ m.get_tipo_display }}
               </span>
             </td>
             <td><strong>{{ m.pessoa.razao_social }}</strong></td>
-            <td>{{ m.documento_numero|default:"-" }}</td>
+            <td class="cell-mono">{{ m.documento_numero|default:"-" }}</td>
             <td>{{ m.data_emissao|date:"d/m/Y" }}</td>
             <td>
               {% for c in m.classificacoes.all %}
-                <span class="badge-status ativo" style="background:#f1f5f9; color:#334155;">{{ c.descricao }}</span>
+                <span class="tag-classification">{{ c.descricao }}</span>
               {% empty %}
-                -
+                <span style="color:var(--text-muted);">-</span>
               {% endfor %}
             </td>
-            <td style="text-align:right; font-weight:700;">R$ {{ m.valor_total|floatformat:2 }}</td>
-            <td style="text-align:center;">
-              <span class="badge-status ativo">ATIVO</span>
+            <td class="cell-mono cell-amount">R$ {{ m.valor_total|floatformat:2 }}</td>
+            <td style="text-align: center;">
+              <span class="status-pill-subtle pill-active">Ativo</span>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="8" class="table-empty-state">
-              <div class="table-empty-icon">📂</div>
-              <p>Nenhum movimento registrado ainda. Extraia uma nota fiscal no Extrator Fiscal ou adicione manualmente.</p>
+            <td colspan="8" class="table-empty">
+              Nenhum movimento registrado ainda. Utilize as ações acima para cadastrar ou extrair uma DANFE.
             </td>
           </tr>
           {% endfor %}

@@ -5,20 +5,11 @@
 {% block content %}
 <div style="max-width: 1200px; margin: 0 auto;">
 
-  <!-- Título da Seção -->
-  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+  <!-- Cabeçalho da Página -->
+  <div class="page-header">
     <div>
-      <h1 class="main-title" style="margin-bottom:0.25rem;">👥 Manter Pessoas</h1>
-      <p style="color:#64748b; font-size:0.95rem;">Gestão de Fornecedores, Clientes e Faturados do Sistema com validação em tempo real.</p>
-    </div>
-
-    <!-- Badge do Commit do GitHub -->
-    <div class="github-commit-badge" style="font-size:0.85rem; padding: 0.45rem 0.9rem;">
-      <span class="gh-icon">🐙</span>
-      <span class="gh-label">Código Última Atualização no GitHub:</span>
-      <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash">
-        <code>{{ git_commit_hash }}</code>
-      </a>
+      <h1 class="page-title">Pessoas</h1>
+      <p class="page-subtitle">Gestão de Fornecedores, Clientes e Faturados com validação em tempo real.</p>
     </div>
   </div>
 
