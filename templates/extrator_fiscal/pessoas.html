@@ -1,0 +1,313 @@
+{% extends "extrator_fiscal/base.html" %}
+
+{% block title %}Manter Pessoas | Controle Financeiro Rural{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto;">
+
+  <!-- Título da Seção -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+    <div>
+      <h1 class="main-title" style="margin-bottom:0.25rem;">👥 Manter Pessoas</h1>
+      <p style="color:#64748b; font-size:0.95rem;">Gestão de Fornecedores, Clientes e Faturados do Sistema.</p>
+    </div>
+
+    <!-- Badge do Commit do GitHub -->
+    <div class="github-commit-badge" style="font-size:0.85rem; padding: 0.45rem 0.9rem;">
+      <span class="gh-icon">🐙</span>
+      <span class="gh-label">Código Última Atualização no GitHub:</span>
+      <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash">
+        <code>{{ git_commit_hash }}</code>
+      </a>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros e Busca (Conforme Regra do Layout - Página 4 do PDF) -->
+  <div class="crud-toolbar">
+    <div class="crud-search-group">
+      <input type="text" id="input-busca-pessoas" class="crud-search-input" placeholder="Buscar por Razão Social, Fantasia, CPF/CNPJ ou ID...">
+      <select id="select-filtro-tipo" class="crud-search-input" style="max-width: 160px;">
+        <option value="">Todos os Tipos</option>
+        <option value="FORNECEDOR">Fornecedor</option>
+        <option value="CLIENTE">Cliente</option>
+        <option value="FATURADO">Faturado</option>
+        <option value="CLIENTE-FORNECEDOR">Cliente/Fornecedor</option>
+      </select>
+      <button type="button" id="btn-buscar-pessoas" class="btn-crud-buscar">
+        🔍 Buscar
+      </button>
+      <button type="button" id="btn-todos-pessoas" class="btn-crud-todos" title="Carrega todos com status = ATIVO">
+        📋 Todos (Ativos)
+      </button>
+    </div>
+
+    <div>
+      <button type="button" id="btn-novo-pessoa" class="btn-crud-novo">
+        ➕ Inserir Nova Pessoa
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabela de Registros com Indexação por Coluna -->
+  <div class="crud-table-card">
+    <div class="table-responsive">
+      <table class="crud-table" id="tabela-pessoas">
+        <thead>
+          <tr>
+            <th style="width: 60px;">ID</th>
+            <th>Razão Social / Nome</th>
+            <th>Nome Fantasia</th>
+            <th>CPF / CNPJ</th>
+            <th>Tipo</th>
+            <th>Telefone / E-mail</th>
+            <th style="text-align:center;">Status</th>
+            <th style="text-align:center; width: 160px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-pessoas">
+          <!-- Regra do layout: Trazer a tabela de registros inicialmente vazia -->
+          <tr>
+            <td colspan="8" class="table-empty-state">
+              <div class="table-empty-icon">👥</div>
+              <p>Tabela de registros vazia. Utilize a <strong>Busca</strong> ou clique em <strong>Todos (Ativos)</strong> para carregar os dados.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal de Cadastro / Edição de Pessoa -->
+<div id="modal-pessoa" class="modal-overlay hidden">
+  <div class="modal-card" style="max-width: 580px;">
+    <div class="modal-header">
+      <h3 id="modal-pessoa-title">Inserir Nova Pessoa</h3>
+      <button type="button" id="btn-close-modal-pessoa" class="btn-close">&times;</button>
+    </div>
+    <form id="form-pessoa">
+      <!-- ID oculto para edição -->
+      <input type="hidden" id="pessoa-id" value="">
+      <!-- STATUS oculto: Regra da Página 4 (No CREATE campo STATUS oculto == ATIVO; No UPDATE campo STATUS oculto) -->
+      <input type="hidden" id="pessoa-status" value="ATIVO">
+
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="pessoa-razao">Razão Social / Nome Completo *:</label>
+          <input type="text" id="pessoa-razao" class="crud-search-input" style="width:100%;" required placeholder="Ex: IGUAÇU MAQUINAS AGRICOLAS LTDA">
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div class="form-group">
+            <label for="pessoa-fantasia">Nome Fantasia:</label>
+            <input type="text" id="pessoa-fantasia" class="crud-search-input" style="width:100%;" placeholder="Ex: Iguaçu Peças">
+          </div>
+          <div class="form-group">
+            <label for="pessoa-cpf-cnpj">CPF / CNPJ:</label>
+            <input type="text" id="pessoa-cpf-cnpj" class="crud-search-input" style="width:100%;" placeholder="00.000.000/0000-00">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div class="form-group">
+            <label for="pessoa-tipo">Tipo de Pessoa *:</label>
+            <select id="pessoa-tipo" class="crud-search-input" style="width:100%;" required>
+              <option value="FORNECEDOR">Fornecedor</option>
+              <option value="CLIENTE">Cliente</option>
+              <option value="FATURADO">Faturado</option>
+              <option value="CLIENTE-FORNECEDOR">Cliente / Fornecedor</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="pessoa-telefone">Telefone:</label>
+            <input type="text" id="pessoa-telefone" class="crud-search-input" style="width:100%;" placeholder="(64) 99999-0000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="pessoa-email">E-mail:</label>
+          <input type="email" id="pessoa-email" class="crud-search-input" style="width:100%;" placeholder="contato@empresa.com.br">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-cancelar-pessoa" class="btn-secondary">Cancelar</button>
+        <button type="submit" id="btn-salvar-pessoa" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tbody = document.getElementById('tbody-pessoas');
+  const btnBuscar = document.getElementById('btn-buscar-pessoas');
+  const btnTodos = document.getElementById('btn-todos-pessoas');
+  const inputBusca = document.getElementById('input-busca-pessoas');
+  const selectTipo = document.getElementById('select-filtro-tipo');
+
+  const modalPessoa = document.getElementById('modal-pessoa');
+  const btnNovo = document.getElementById('btn-novo-pessoa');
+  const btnCloseModal = document.getElementById('btn-close-modal-pessoa');
+  const btnCancelar = document.getElementById('btn-cancelar-pessoa');
+  const formPessoa = document.getElementById('form-pessoa');
+
+  // Carrega registros da API
+  async function carregarPessoas(params = {}) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#64748b;">Carregando registros...</td></tr>';
+    const query = new URLSearchParams(params).toString();
+    try {
+      const res = await fetch(`/api/pessoas/listar/?${query}`);
+      const data = await res.json();
+      if (!data.registros || data.registros.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhum registro encontrado para os critérios informados.</p></td></tr>`;
+        return;
+      }
+      renderTabela(data.registros);
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ef4444; padding:2rem;">Erro ao carregar registros.</td></tr>`;
+    }
+  }
+
+  function renderTabela(registros) {
+    tbody.innerHTML = '';
+    registros.forEach(p => {
+      const tr = document.createElement('tr');
+      const isAtivo = p.status === 'ATIVO';
+      tr.innerHTML = `
+        <td><strong>#${p.id}</strong></td>
+        <td><strong>${p.razao_social}</strong></td>
+        <td>${p.nome_fantasia}</td>
+        <td><code>${p.cpf_cnpj}</code></td>
+        <td><span class="badge-status" style="background:#e0e7ff; color:#3730a3;">${p.tipo_display}</span></td>
+        <td><small>${p.telefone} / ${p.email}</small></td>
+        <td style="text-align:center;">
+          <span class="badge-status ${isAtivo ? 'ativo' : 'inativo'}">${p.status}</span>
+        </td>
+        <td style="text-align:center;">
+          <div class="table-actions" style="justify-content:center;">
+            <button class="btn-action-sm btn-edit" onclick="editarPessoa(${JSON.stringify(p).replace(/"/g, '&quot;')})">Editar</button>
+            ${isAtivo 
+              ? `<button class="btn-action-sm btn-delete" onclick="inativarPessoa(${p.id}, '${p.razao_social.replace(/'/g, "\\'")}')">Excluir</button>`
+              : `<button class="btn-action-sm btn-reactivate" onclick="reativarPessoa(${p.id}, '${p.razao_social.replace(/'/g, "\\'")}')">Reativar</button>`
+            }
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Ações de Busca e Botão TODOS
+  btnBuscar.addEventListener('click', () => {
+    carregarPessoas({ q: inputBusca.value.trim(), tipo: selectTipo.value });
+  });
+
+  inputBusca.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      carregarPessoas({ q: inputBusca.value.trim(), tipo: selectTipo.value });
+    }
+  });
+
+  btnTodos.addEventListener('click', () => {
+    inputBusca.value = '';
+    selectTipo.value = '';
+    carregarPessoas({ todos: 'true' });
+  });
+
+  // Modal Novo / Edição
+  btnNovo.addEventListener('click', () => {
+    document.getElementById('modal-pessoa-title').textContent = 'Inserir Nova Pessoa';
+    document.getElementById('pessoa-id').value = '';
+    document.getElementById('pessoa-razao').value = '';
+    document.getElementById('pessoa-fantasia').value = '';
+    document.getElementById('pessoa-cpf-cnpj').value = '';
+    document.getElementById('pessoa-tipo').value = 'FORNECEDOR';
+    document.getElementById('pessoa-telefone').value = '';
+    document.getElementById('pessoa-email').value = '';
+    document.getElementById('pessoa-status').value = 'ATIVO';
+    modalPessoa.classList.remove('hidden');
+  });
+
+  function fecharModal() {
+    modalPessoa.classList.add('hidden');
+  }
+  btnCloseModal.addEventListener('click', fecharModal);
+  btnCancelar.addEventListener('click', fecharModal);
+
+  window.editarPessoa = (p) => {
+    document.getElementById('modal-pessoa-title').textContent = `Editar Pessoa #${p.id}`;
+    document.getElementById('pessoa-id').value = p.id;
+    document.getElementById('pessoa-razao').value = p.razao_social;
+    document.getElementById('pessoa-fantasia').value = p.nome_fantasia !== '-' ? p.nome_fantasia : '';
+    document.getElementById('pessoa-cpf-cnpj').value = p.cpf_cnpj !== '-' ? p.cpf_cnpj : '';
+    document.getElementById('pessoa-tipo').value = p.tipo;
+    document.getElementById('pessoa-telefone').value = p.telefone !== '-' ? p.telefone : '';
+    document.getElementById('pessoa-email').value = p.email !== '-' ? p.email : '';
+    modalPessoa.classList.remove('hidden');
+  };
+
+  window.inativarPessoa = async (id, nome) => {
+    if (!confirm(`Deseja realmente inativar (exclusão lógica) a pessoa "${nome}"?`)) return;
+    try {
+      const res = await fetch(`/api/pessoas/inativar/${id}/`, { method: 'POST' });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        carregarPessoas({ todos: 'true' });
+      }
+    } catch (e) {
+      showToast('Erro ao inativar registro.');
+    }
+  };
+
+  window.reativarPessoa = async (id, nome) => {
+    try {
+      const res = await fetch(`/api/pessoas/reativar/${id}/`, { method: 'POST' });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        carregarPessoas({ todos: 'true' });
+      }
+    } catch (e) {
+      showToast('Erro ao reativar registro.');
+    }
+  };
+
+  formPessoa.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      id: document.getElementById('pessoa-id').value || null,
+      razao_social: document.getElementById('pessoa-razao').value.trim(),
+      nome_fantasia: document.getElementById('pessoa-fantasia').value.trim(),
+      cpf_cnpj: document.getElementById('pessoa-cpf-cnpj').value.trim(),
+      tipo: document.getElementById('pessoa-tipo').value,
+      telefone: document.getElementById('pessoa-telefone').value.trim(),
+      email: document.getElementById('pessoa-email').value.trim(),
+      status: 'ATIVO' // Campo oculto conforme regra
+    };
+
+    try {
+      const res = await fetch('/api/pessoas/salvar/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        fecharModal();
+        carregarPessoas({ todos: 'true' });
+      } else {
+        alert(data.erro || 'Falha ao salvar');
+      }
+    } catch (err) {
+      alert('Erro na requisição');
+    }
+  });
+});
+</script>
+{% endblock %}

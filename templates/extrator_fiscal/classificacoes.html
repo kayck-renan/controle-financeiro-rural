@@ -1,0 +1,279 @@
+{% extends "extrator_fiscal/base.html" %}
+
+{% block title %}Manter Classificações | Controle Financeiro Rural{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto;">
+
+  <!-- Título da Seção -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+    <div>
+      <h1 class="main-title" style="margin-bottom:0.25rem;">🏷️ Manter Classificações</h1>
+      <p style="color:#64748b; font-size:0.95rem;">Categorias Contábeis de Despesas e Receitas Agrícolas (9 Macrocategorias da N2).</p>
+    </div>
+
+    <!-- Badge do Commit do GitHub -->
+    <div class="github-commit-badge" style="font-size:0.85rem; padding: 0.45rem 0.9rem;">
+      <span class="gh-icon">🐙</span>
+      <span class="gh-label">Código Última Atualização no GitHub:</span>
+      <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash">
+        <code>{{ git_commit_hash }}</code>
+      </a>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros e Busca (Página 4 do PDF) -->
+  <div class="crud-toolbar">
+    <div class="crud-search-group">
+      <input type="text" id="input-busca-class" class="crud-search-input" placeholder="Buscar por descrição ou detalhes da classificação...">
+      <select id="select-filtro-tipo-class" class="crud-search-input" style="max-width: 160px;">
+        <option value="">Todos os Tipos</option>
+        <option value="DESPESA">Despesas</option>
+        <option value="RECEITA">Receitas</option>
+      </select>
+      <button type="button" id="btn-buscar-class" class="btn-crud-buscar">
+        🔍 Buscar
+      </button>
+      <button type="button" id="btn-todos-class" class="btn-crud-todos" title="Carrega todos com status = ATIVO">
+        📋 Todos (Ativos)
+      </button>
+    </div>
+
+    <div>
+      <button type="button" id="btn-novo-class" class="btn-crud-novo">
+        ➕ Inserir Nova Classificação
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabela de Registros com Indexação por Coluna -->
+  <div class="crud-table-card">
+    <div class="table-responsive">
+      <table class="crud-table" id="tabela-class">
+        <thead>
+          <tr>
+            <th style="width: 60px;">ID</th>
+            <th>Descrição da Classificação</th>
+            <th style="width: 140px;">Tipo</th>
+            <th>Observações / Exemplos</th>
+            <th style="width: 110px; text-align:center;">Status</th>
+            <th style="text-align:center; width: 160px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-class">
+          <!-- Regra do layout: Tabela vazia inicialmente -->
+          <tr>
+            <td colspan="6" class="table-empty-state">
+              <div class="table-empty-icon">🏷️</div>
+              <p>Tabela de classificações vazia. Utilize a <strong>Busca</strong> ou clique em <strong>Todos (Ativos)</strong> para carregar os registros.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal de Cadastro / Edição de Classificação -->
+<div id="modal-class" class="modal-overlay hidden">
+  <div class="modal-card" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3 id="modal-class-title">Inserir Nova Classificação</h3>
+      <button type="button" id="btn-close-modal-class" class="btn-close">&times;</button>
+    </div>
+    <form id="form-class">
+      <input type="hidden" id="class-id" value="">
+      <input type="hidden" id="class-status" value="ATIVO">
+
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="class-desc">Descrição da Classificação *:</label>
+          <input type="text" id="class-desc" class="crud-search-input" style="width:100%;" required placeholder="Ex: MANUTENÇÃO E OPERAÇÃO">
+        </div>
+
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="class-tipo">Tipo de Classificação *:</label>
+          <select id="class-tipo" class="crud-search-input" style="width:100%;" required>
+            <option value="DESPESA">DESPESA</option>
+            <option value="RECEITA">RECEITA</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="class-obs">Observações / Exemplos de Itens:</label>
+          <textarea id="class-obs" class="crud-search-input" style="width:100%; min-height:80px;" placeholder="Ex: Peças, lubrificantes, filtros, parafusos..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-cancelar-class" class="btn-secondary">Cancelar</button>
+        <button type="submit" id="btn-salvar-class" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tbody = document.getElementById('tbody-class');
+  const btnBuscar = document.getElementById('btn-buscar-class');
+  const btnTodos = document.getElementById('btn-todos-class');
+  const inputBusca = document.getElementById('input-busca-class');
+  const selectTipo = document.getElementById('select-filtro-tipo-class');
+
+  const modalClass = document.getElementById('modal-class');
+  const btnNovo = document.getElementById('btn-novo-class');
+  const btnCloseModal = document.getElementById('btn-close-modal-class');
+  const btnCancelar = document.getElementById('btn-cancelar-class');
+  const formClass = document.getElementById('form-class');
+
+  async function carregarClassificacoes(params = {}) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#64748b;">Carregando registros...</td></tr>';
+    const query = new URLSearchParams(params).toString();
+    try {
+      const res = await fetch(`/api/classificacoes/listar/?${query}`);
+      const data = await res.json();
+      if (!data.registros || data.registros.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhuma classificação encontrada para os critérios informados.</p></td></tr>`;
+        return;
+      }
+      renderTabela(data.registros);
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#ef4444; padding:2rem;">Erro ao carregar registros.</td></tr>`;
+    }
+  }
+
+  function renderTabela(registros) {
+    tbody.innerHTML = '';
+    registros.forEach(c => {
+      const tr = document.createElement('tr');
+      const isAtivo = c.status === 'ATIVO';
+      const isDespesa = c.tipo === 'DESPESA';
+      tr.innerHTML = `
+        <td><strong>#${c.id}</strong></td>
+        <td><strong>${c.descricao}</strong></td>
+        <td>
+          <span class="badge-status" style="background:${isDespesa ? '#fee2e2' : '#dcfce7'}; color:${isDespesa ? '#991b1b' : '#166534'};">
+            ${c.tipo_display}
+          </span>
+        </td>
+        <td><small style="color:#64748b;">${c.observacoes}</small></td>
+        <td style="text-align:center;">
+          <span class="badge-status ${isAtivo ? 'ativo' : 'inativo'}">${c.status}</span>
+        </td>
+        <td style="text-align:center;">
+          <div class="table-actions" style="justify-content:center;">
+            <button class="btn-action-sm btn-edit" onclick="editarClassificacao(${JSON.stringify(c).replace(/"/g, '&quot;')})">Editar</button>
+            ${isAtivo 
+              ? `<button class="btn-action-sm btn-delete" onclick="inativarClassificacao(${c.id}, '${c.descricao.replace(/'/g, "\\'")}')">Excluir</button>`
+              : `<button class="btn-action-sm btn-reactivate" onclick="reativarClassificacao(${c.id}, '${c.descricao.replace(/'/g, "\\'")}')">Reativar</button>`
+            }
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  btnBuscar.addEventListener('click', () => {
+    carregarClassificacoes({ q: inputBusca.value.trim(), tipo: selectTipo.value });
+  });
+
+  inputBusca.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      carregarClassificacoes({ q: inputBusca.value.trim(), tipo: selectTipo.value });
+    }
+  });
+
+  btnTodos.addEventListener('click', () => {
+    inputBusca.value = '';
+    selectTipo.value = '';
+    carregarClassificacoes({ todos: 'true' });
+  });
+
+  btnNovo.addEventListener('click', () => {
+    document.getElementById('modal-class-title').textContent = 'Inserir Nova Classificação';
+    document.getElementById('class-id').value = '';
+    document.getElementById('class-desc').value = '';
+    document.getElementById('class-tipo').value = 'DESPESA';
+    document.getElementById('class-obs').value = '';
+    document.getElementById('class-status').value = 'ATIVO';
+    modalClass.classList.remove('hidden');
+  });
+
+  function fecharModal() {
+    modalClass.classList.add('hidden');
+  }
+  btnCloseModal.addEventListener('click', fecharModal);
+  btnCancelar.addEventListener('click', fecharModal);
+
+  window.editarClassificacao = (c) => {
+    document.getElementById('modal-class-title').textContent = `Editar Classificação #${c.id}`;
+    document.getElementById('class-id').value = c.id;
+    document.getElementById('class-desc').value = c.descricao;
+    document.getElementById('class-tipo').value = c.tipo;
+    document.getElementById('class-obs').value = c.observacoes !== '-' ? c.observacoes : '';
+    modalClass.classList.remove('hidden');
+  };
+
+  window.inativarClassificacao = async (id, desc) => {
+    if (!confirm(`Deseja inativar a classificação "${desc}"?`)) return;
+    try {
+      const res = await fetch(`/api/classificacoes/inativar/${id}/`, { method: 'POST' });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        carregarClassificacoes({ todos: 'true' });
+      }
+    } catch (e) {
+      showToast('Erro ao inativar registro.');
+    }
+  };
+
+  window.reativarClassificacao = async (id, desc) => {
+    try {
+      const res = await fetch(`/api/classificacoes/reativar/${id}/`, { method: 'POST' });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        carregarClassificacoes({ todos: 'true' });
+      }
+    } catch (e) {
+      showToast('Erro ao reativar registro.');
+    }
+  };
+
+  formClass.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      id: document.getElementById('class-id').value || null,
+      descricao: document.getElementById('class-desc').value.trim(),
+      tipo: document.getElementById('class-tipo').value,
+      observacoes: document.getElementById('class-obs').value.trim(),
+      status: 'ATIVO'
+    };
+
+    try {
+      const res = await fetch('/api/classificacoes/salvar/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        fecharModal();
+        carregarClassificacoes({ todos: 'true' });
+      } else {
+        alert(data.erro || 'Falha ao salvar');
+      }
+    } catch (err) {
+      alert('Erro na requisição');
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Sistema de Controle Financeiro Rural | UniRV{% endblock %}</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <!-- Header Acadêmico Superior -->
+  <header class="top-nav">
+    <div class="nav-container" style="max-width: 100%;">
+      <div class="brand">
+        <span class="brand-badge">UniRV • DOO</span>
+        <span class="brand-title">Sistema de Controle Financeiro Rural</span>
+      </div>
+
+      <div class="nav-meta">
+        <!-- Código Última Atualização no GitHub (Exigência do Professor / Aluno) -->
+        <div class="github-commit-badge" title="Código da Última Atualização no GitHub">
+          <span class="gh-icon">🐙</span>
+          <span class="gh-label">Código Última Atualização:</span>
+          <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash" id="top-github-hash">
+            <code>{{ git_commit_hash }}</code>
+          </a>
+        </div>
+
+        <span class="tag-etapa">Avaliação N2 • Etapa 2</span>
+
+        <!-- Status Seguro da Chave LLM (Oculta por Segurança) -->
+        <div id="key-live-pill" class="key-pill" title="Status Seguro da Chave da API">
+          <span class="pulse-dot-small" id="pill-dot"></span>
+          <span id="pill-text">Chave: Protegida</span>
+        </div>
+
+        <button id="btn-toggle-config" class="btn-config" title="Gerenciar Chave da API Gemini">
+          ⚙️ Chave Gemini
+        </button>
+
+        <!-- Informações do Usuário Autenticado -->
+        <div class="user-pill">
+          <span class="user-pill-name">👤 {{ usuario_logado }}</span>
+          <a href="{% url 'extrator_fiscal:logout' %}" class="btn-logout-small" title="Encerrar Sessão">Sair</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Modal / Painel de Configuração da Chave Gemini (Protegido e Mascarado) -->
+  <div id="modal-config" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Segurança da Chave da API Google Gemini</h3>
+        <button id="btn-close-config" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-text">
+          Por questões de segurança, a chave da API é transmitida de forma criptografada e armazenada de forma segura, permanecendo oculta contra visualização indevida.
+        </p>
+        <div class="form-group">
+          <label for="input-api-key">Atualizar Chave da API Gemini (Oculta):</label>
+          <div class="key-input-group">
+            <input type="password" id="input-api-key" placeholder="••••••••••••••••••••" autocomplete="off">
+          </div>
+          <small class="helper-text" style="margin-top:0.5rem;display:block;">
+            <span class="status-badge status-ok">🔒 Modo Seguro: A chave nunca é exibida em texto aberto na tela.</span>
+          </small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-clear-key" class="btn-secondary">Remover Chave</button>
+        <button id="btn-save-key" class="btn-primary">Salvar e Ativar Chave</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layout com Sidebar e Área de Conteúdo -->
+  <div class="app-wrapper">
+    <!-- Sidebar estilo Projeto TFC / UniRV (Página 5 do PDF) -->
+    <aside class="app-sidebar">
+      <div class="sidebar-header">
+        <span class="sidebar-logo-icon">🌾</span>
+        <div>
+          <div class="sidebar-app-title">Controle Rural</div>
+          <div class="sidebar-app-sub">Gestão Financeira & DOO</div>
+        </div>
+      </div>
+
+      <div class="sidebar-user-card">
+        <span class="sidebar-user-role">Autenticado</span>
+        <span class="sidebar-user-name">{{ usuario_logado }}</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="{% url 'extrator_fiscal:dashboard' %}" class="sidebar-nav-item {% if pagina_ativa == 'dashboard' %}active{% endif %}">
+          <span class="sidebar-nav-icon">📊</span>
+          <span>Dashboard</span>
+        </a>
+
+        <a href="{% url 'extrator_fiscal:index' %}" class="sidebar-nav-item {% if pagina_ativa == 'extrator' %}active{% endif %}">
+          <span class="sidebar-nav-icon">📄</span>
+          <span>Extrator Fiscal</span>
+        </a>
+
+        <a href="{% url 'extrator_fiscal:pessoas' %}" class="sidebar-nav-item {% if pagina_ativa == 'pessoas' %}active{% endif %}">
+          <span class="sidebar-nav-icon">👥</span>
+          <span>Manter Pessoas</span>
+        </a>
+
+        <a href="{% url 'extrator_fiscal:classificacoes' %}" class="sidebar-nav-item {% if pagina_ativa == 'classificacoes' %}active{% endif %}">
+          <span class="sidebar-nav-icon">🏷️</span>
+          <span>Classificações</span>
+        </a>
+
+        <a href="{% url 'extrator_fiscal:contas_pagar' %}" class="sidebar-nav-item {% if pagina_ativa == 'contas_pagar' %}active{% endif %}">
+          <span class="sidebar-nav-icon">💳</span>
+          <span>Contas a Pagar</span>
+        </a>
+
+        <a href="{% url 'extrator_fiscal:contas_receber' %}" class="sidebar-nav-item {% if pagina_ativa == 'contas_receber' %}active{% endif %}">
+          <span class="sidebar-nav-icon">💵</span>
+          <span>Contas a Receber</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div><strong>UniRV</strong> - Faculdade DOO</div>
+        <div>GitHub Commit: <code>{{ git_commit_hash }}</code></div>
+      </div>
+    </aside>
+
+    <!-- Área de Conteúdo -->
+    <main class="app-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- Toast de Notificações -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="{% static 'js/app.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

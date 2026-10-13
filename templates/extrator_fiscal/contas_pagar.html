@@ -1,0 +1,338 @@
+{% extends "extrator_fiscal/base.html" %}
+
+{% block title %}Registrar Contas a Pagar | Controle Financeiro Rural{% endblock %}
+
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto;">
+
+  <!-- Título da Seção -->
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+    <div>
+      <h1 class="main-title" style="margin-bottom:0.25rem;">💳 Registrar Contas a Pagar</h1>
+      <p style="color:#64748b; font-size:0.95rem;">Controle de pagamentos a fornecedores, compras rurais e parcelas de obrigações.</p>
+    </div>
+
+    <!-- Badge do Commit do GitHub -->
+    <div class="github-commit-badge" style="font-size:0.85rem; padding: 0.45rem 0.9rem;">
+      <span class="gh-icon">🐙</span>
+      <span class="gh-label">Código Última Atualização no GitHub:</span>
+      <a href="{{ git_commit_url }}" target="_blank" rel="noopener noreferrer" class="gh-hash">
+        <code>{{ git_commit_hash }}</code>
+      </a>
+    </div>
+  </div>
+
+  <!-- Barra de Filtros e Busca (Página 4 do PDF) -->
+  <div class="crud-toolbar">
+    <div class="crud-search-group">
+      <input type="text" id="input-busca-pagar" class="crud-search-input" placeholder="Buscar por Nº do Documento/NF, Fornecedor ou Descrição...">
+      <button type="button" id="btn-buscar-pagar" class="btn-crud-buscar">
+        🔍 Buscar
+      </button>
+      <button type="button" id="btn-todos-pagar" class="btn-crud-todos" title="Carrega todos com status = ATIVO">
+        📋 Todos (Ativos)
+      </button>
+    </div>
+
+    <div>
+      <button type="button" id="btn-novo-pagar" class="btn-crud-novo" style="background:#b91c1c;">
+        ➕ Nova Conta a Pagar
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabela de Registros com Indexação por Coluna -->
+  <div class="crud-table-card">
+    <div class="table-responsive">
+      <table class="crud-table" id="tabela-pagar">
+        <thead>
+          <tr>
+            <th style="width: 60px;">ID</th>
+            <th>Nº Documento / NF</th>
+            <th>Fornecedor</th>
+            <th>Faturado</th>
+            <th>Emissão</th>
+            <th>Classificações (Despesas)</th>
+            <th style="text-align:right;">Valor Total</th>
+            <th style="text-align:center;">Parcelas</th>
+            <th style="text-align:center;">Status</th>
+            <th style="text-align:center; width: 160px;">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-pagar">
+          <!-- Regra do layout: Tabela vazia inicialmente -->
+          <tr>
+            <td colspan="10" class="table-empty-state">
+              <div class="table-empty-icon">💳</div>
+              <p>Tabela de contas a pagar vazia. Utilize a <strong>Busca</strong> ou clique em <strong>Todos (Ativos)</strong> para carregar os registros.</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal de Cadastro / Edição de Conta a Pagar -->
+<div id="modal-pagar" class="modal-overlay hidden">
+  <div class="modal-card" style="max-width: 680px;">
+    <div class="modal-header">
+      <h3 id="modal-pagar-title">Registrar Conta a Pagar</h3>
+      <button type="button" id="btn-close-modal-pagar" class="btn-close">&times;</button>
+    </div>
+    <form id="form-pagar">
+      <input type="hidden" id="pagar-id" value="">
+      <input type="hidden" id="pagar-status" value="ATIVO">
+
+      <div class="modal-body" style="max-height:75vh; overflow-y:auto;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div class="form-group">
+            <label for="pagar-fornecedor">Fornecedor *:</label>
+            <select id="pagar-fornecedor" class="crud-search-input" style="width:100%;" required>
+              <option value="">Selecione o Fornecedor...</option>
+              {% for f in fornecedores %}
+                <option value="{{ f.id }}">{{ f.razao_social }} {% if f.cpf_cnpj %}({{ f.cpf_cnpj }}){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="pagar-faturado">Faturado (Produtor):</label>
+            <select id="pagar-faturado" class="crud-search-input" style="width:100%;">
+              <option value="">Selecione o Faturado...</option>
+              {% for fat in faturados %}
+                <option value="{{ fat.id }}">{{ fat.razao_social }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div class="form-group">
+            <label for="pagar-doc">Nº Documento / NF:</label>
+            <input type="text" id="pagar-doc" class="crud-search-input" style="width:100%;" placeholder="000.084.682">
+          </div>
+          <div class="form-group">
+            <label for="pagar-serie">Série:</label>
+            <input type="text" id="pagar-serie" class="crud-search-input" style="width:100%;" value="1">
+          </div>
+          <div class="form-group">
+            <label for="pagar-emissao">Data de Emissão *:</label>
+            <input type="date" id="pagar-emissao" class="crud-search-input" style="width:100%;" required>
+          </div>
+        </div>
+
+        <!-- Regra de Negócio: Um registro pode ser classificado em uma ou mais Despesas -->
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label>Classificações de Despesa (Selecione uma ou mais) *:</label>
+          <div style="max-height: 120px; overflow-y:auto; border:1px solid #cbd5e1; border-radius:6px; padding:0.5rem; background:#fff;">
+            {% for c in classificacoes %}
+            <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; margin-bottom:0.35rem; cursor:pointer;">
+              <input type="checkbox" name="pagar-classificacao" value="{{ c.id }}">
+              <span>{{ c.descricao }}</span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div class="form-group">
+            <label for="pagar-valor-total">Valor Total (R$) *:</label>
+            <input type="number" step="0.01" id="pagar-valor-total" class="crud-search-input" style="width:100%;" required placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label for="pagar-qtd-parcelas">Qtd de Parcelas:</label>
+            <input type="number" min="1" max="24" id="pagar-qtd-parcelas" class="crud-search-input" style="width:100%;" value="1">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label for="pagar-vencimento">Data de Vencimento Inicial *:</label>
+          <input type="date" id="pagar-vencimento" class="crud-search-input" style="width:100%;" required>
+        </div>
+
+        <div class="form-group">
+          <label for="pagar-descricao">Descrição / Detalhes dos Itens:</label>
+          <textarea id="pagar-descricao" class="crud-search-input" style="width:100%; min-height:60px;" placeholder="Ex: Aquisição de peças, graxa e filtros..."></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="btn-cancelar-pagar" class="btn-secondary">Cancelar</button>
+        <button type="submit" id="btn-salvar-pagar" class="btn-primary" style="background:#b91c1c;">Salvar Conta a Pagar</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const tbody = document.getElementById('tbody-pagar');
+  const btnBuscar = document.getElementById('btn-buscar-pagar');
+  const btnTodos = document.getElementById('btn-todos-pagar');
+  const inputBusca = document.getElementById('input-busca-pagar');
+
+  const modalPagar = document.getElementById('modal-pagar');
+  const btnNovo = document.getElementById('btn-novo-pagar');
+  const btnCloseModal = document.getElementById('btn-close-modal-pagar');
+  const btnCancelar = document.getElementById('btn-cancelar-pagar');
+  const formPagar = document.getElementById('form-pagar');
+
+  async function carregarContasPagar(params = {}) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:#64748b;">Carregando registros...</td></tr>';
+    const query = new URLSearchParams(params).toString();
+    try {
+      const res = await fetch(`/api/contas-a-pagar/listar/?${query}`);
+      const data = await res.json();
+      if (!data.registros || data.registros.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhum registro de conta a pagar encontrado.</p></td></tr>`;
+        return;
+      }
+      renderTabela(data.registros);
+    } catch (e) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:#ef4444; padding:2rem;">Erro ao carregar registros.</td></tr>`;
+    }
+  }
+
+  function renderTabela(registros) {
+    tbody.innerHTML = '';
+    registros.forEach(m => {
+      const tr = document.createElement('tr');
+      const isAtivo = m.status === 'ATIVO';
+      tr.innerHTML = `
+        <td><strong>#${m.id}</strong></td>
+        <td><code>${m.documento_numero}</code></td>
+        <td><strong>${m.pessoa_nome}</strong></td>
+        <td>${m.faturado_nome}</td>
+        <td>${m.data_emissao}</td>
+        <td><small style="color:#475569;">${m.classificacoes}</small></td>
+        <td style="text-align:right; font-weight:700; color:#b91c1c;">R$ ${m.valor_total}</td>
+        <td style="text-align:center;"><span class="badge-status" style="background:#f1f5f9; color:#334155;">${m.qtd_parcelas} parc.</span></td>
+        <td style="text-align:center;">
+          <span class="badge-status ${isAtivo ? 'ativo' : 'inativo'}">${m.status}</span>
+        </td>
+        <td style="text-align:center;">
+          <div class="table-actions" style="justify-content:center;">
+            ${isAtivo 
+              ? `<button class="btn-action-sm btn-delete" onclick="inativarMovimento(${m.id})">Excluir</button>`
+              : `<button class="btn-action-sm btn-reactivate" onclick="reativarMovimento(${m.id})">Reativar</button>`
+            }
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  btnBuscar.addEventListener('click', () => {
+    carregarContasPagar({ q: inputBusca.value.trim() });
+  });
+
+  inputBusca.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      carregarContasPagar({ q: inputBusca.value.trim() });
+    }
+  });
+
+  btnTodos.addEventListener('click', () => {
+    inputBusca.value = '';
+    carregarContasPagar({ todos: 'true' });
+  });
+
+  btnNovo.addEventListener('click', () => {
+    document.getElementById('pagar-id').value = '';
+    document.getElementById('pagar-doc').value = '';
+    document.getElementById('pagar-serie').value = '1';
+    document.getElementById('pagar-valor-total').value = '';
+    document.getElementById('pagar-qtd-parcelas').value = '1';
+    document.getElementById('pagar-descricao').value = '';
+    
+    const hoje = new Date().toISOString().split('T')[0];
+    document.getElementById('pagar-emissao').value = hoje;
+    document.getElementById('pagar-vencimento').value = hoje;
+    
+    document.querySelectorAll('input[name="pagar-classificacao"]').forEach(cb => cb.checked = false);
+    modalPagar.classList.remove('hidden');
+  });
+
+  function fecharModal() {
+    modalPagar.classList.add('hidden');
+  }
+  btnCloseModal.addEventListener('click', fecharModal);
+  btnCancelar.addEventListener('click', fecharModal);
+
+  window.inativarMovimento = async (id) => {
+    if (!confirm(`Deseja inativar o movimento #${id}?`)) return;
+    try {
+      const res = await fetch(`/api/movimentos/inativar/${id}/`, { method: 'POST' });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        carregarContasPagar({ todos: 'true' });
+      }
+    } catch (e) {
+      showToast('Erro ao inativar registro.');
+    }
+  };
+
+  window.reativarMovimento = async (id) => {
+    try {
+      const res = await fetch(`/api/movimentos/reativar/${id}/`, { method: 'POST' });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        carregarContasPagar({ todos: 'true' });
+      }
+    } catch (e) {
+      showToast('Erro ao reativar registro.');
+    }
+  };
+
+  formPagar.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const classCheckboxes = document.querySelectorAll('input[name="pagar-classificacao"]:checked');
+    const classIds = Array.from(classCheckboxes).map(cb => parseInt(cb.value));
+
+    if (classIds.length === 0) {
+      alert('Selecione ao menos uma classificação de despesa.');
+      return;
+    }
+
+    const payload = {
+      id: document.getElementById('pagar-id').value || null,
+      pessoa_id: document.getElementById('pagar-fornecedor').value,
+      faturado_id: document.getElementById('pagar-faturado').value || null,
+      documento_numero: document.getElementById('pagar-doc').value.trim(),
+      serie: document.getElementById('pagar-serie').value.trim(),
+      data_emissao: document.getElementById('pagar-emissao').value,
+      data_vencimento: document.getElementById('pagar-vencimento').value,
+      valor_total: parseFloat(document.getElementById('pagar-valor-total').value),
+      qtd_parcelas: parseInt(document.getElementById('pagar-qtd-parcelas').value) || 1,
+      classificacoes: classIds,
+      descricao: document.getElementById('pagar-descricao').value.trim(),
+      status: 'ATIVO'
+    };
+
+    try {
+      const res = await fetch('/api/contas-a-pagar/salvar/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.sucesso) {
+        showToast(data.mensagem);
+        fecharModal();
+        carregarContasPagar({ todos: 'true' });
+      } else {
+        alert(data.erro || 'Falha ao salvar');
+      }
+    } catch (err) {
+      alert('Erro na requisição');
+    }
+  });
+});
+</script>
+{% endblock %}

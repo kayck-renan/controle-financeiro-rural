@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Elementos do DOM - Arquivo & Upload
   const fileInput = document.getElementById('file-input');
   const dropzone = document.getElementById('dropzone');
-  const fileNameDisplay = document.getElementById('file-name-display');
   const fileSelectedBadge = document.getElementById('file-selected-badge');
   const badgeFileName = document.getElementById('badge-file-name');
   const badgeFileSize = document.getElementById('badge-file-size');
@@ -22,175 +21,88 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
-  // Elementos de Gestão da KEY em Tempo Real
+  // Elementos de Gestão Segura da KEY (Oculta)
   const keyLivePill = document.getElementById('key-live-pill');
   const pillText = document.getElementById('pill-text');
   const barStatusTag = document.getElementById('bar-status-tag');
   const barLiveFeedback = document.getElementById('bar-live-feedback');
   const barApiKeyInput = document.getElementById('bar-api-key-input');
-  const btnToggleBarEye = document.getElementById('btn-toggle-bar-eye');
   const btnEnviarChave = document.getElementById('btn-enviar-chave');
-  const btnDemoKey = document.getElementById('btn-demo-key');
   const btnLimparChaveBar = document.getElementById('btn-limpar-chave-bar');
-  const typingLiveIndicator = document.getElementById('typing-live-indicator');
-  const typingLiveText = document.getElementById('typing-live-text');
 
   // Modal de Configuração da Chave
   const btnToggleConfig = document.getElementById('btn-toggle-config');
   const modalConfig = document.getElementById('modal-config');
   const btnCloseConfig = document.getElementById('btn-close-config');
   const inputApiKey = document.getElementById('input-api-key');
-  const btnToggleModalEye = document.getElementById('btn-toggle-modal-eye');
-  const modalRealtimeKeyPreview = document.getElementById('modal-realtime-key-preview');
   const btnSaveKey = document.getElementById('btn-save-key');
-  const btnModalDemoKey = document.getElementById('btn-modal-demo-key');
   const btnClearKey = document.getElementById('btn-clear-key');
 
-  const DEMO_API_KEY = 'AIzaSyDemoUniRV2026RuralFinancasKey99';
+  // Elementos da Análise no Banco de Dados (2ª Etapa)
+  const analiseFornNome = document.getElementById('analise-forn-nome');
+  const analiseFornDoc = document.getElementById('analise-forn-doc');
+  const pillFornStatus = document.getElementById('pill-forn-status');
+
+  const analiseFatNome = document.getElementById('analise-fat-nome');
+  const analiseFatDoc = document.getElementById('analise-fat-doc');
+  const pillFatStatus = document.getElementById('pill-fat-status');
+
+  const analiseDespNome = document.getElementById('analise-desp-nome');
+  const pillDespStatus = document.getElementById('pill-desp-status');
+
+  const btnLancarMovimento = document.getElementById('btn-lancar-movimento-etapa2');
+  const boxSucessoLancamento = document.getElementById('box-sucesso-lancamento');
+  const msgSucessoDetalhes = document.getElementById('msg-sucesso-detalhes');
 
   let currentFile = null;
   let useSampleMode = false;
   let lastExtractedData = null;
 
   // =========================================================================
-  // GESTÃO E MONITORAMENTO DA KEY EM TEMPO REAL
+  // GESTÃO SEGURA DA CHAVE GEMINI (OCULTA POR SEGURANÇA)
   // =========================================================================
 
-  function mascararChave(key) {
-    if (!key) return '';
-    if (key.length <= 10) return '••••••••';
-    return key.substring(0, 6) + '••••••••' + key.substring(key.length - 4);
-  }
-
-  // Atualiza todos os indicadores da KEY em tempo real na interface
-  function atualizarStatusKeyInterface(key, modoServidor = null) {
-    const temChave = Boolean(key && key.trim());
-    const mascara = temChave ? mascararChave(key.trim()) : null;
-
-    if (temChave) {
-      // Header pill
+  function atualizarStatusKeyInterface(ativo) {
+    if (ativo) {
       if (keyLivePill) {
         keyLivePill.classList.add('active');
-        pillText.textContent = `🔑 Chave: ${mascara}`;
+        if (pillText) pillText.textContent = '🔒 Chave: Protegida (Ativa)';
       }
-      // Barra principal
       if (barStatusTag) {
         barStatusTag.className = 'status-tag active';
-        barStatusTag.textContent = '✓ CHAVE ATIVA (Online)';
+        barStatusTag.textContent = '✓ Chave Segura Ativa';
       }
       if (barLiveFeedback) {
-        barLiveFeedback.innerHTML = `Chave configurada: <strong>${mascara}</strong> (${key.trim().length} caracteres). Pronto para chamadas à API Gemini.`;
+        barLiveFeedback.textContent = 'Chave da API ativada no ambiente seguro. Oculta contra visualização indevida.';
       }
     } else {
-      // Header pill
       if (keyLivePill) {
         keyLivePill.classList.remove('active');
-        pillText.textContent = '🔑 Modo Local (Sem Chave)';
+        if (pillText) pillText.textContent = 'Modo Inteligente Local';
       }
-      // Barra principal
       if (barStatusTag) {
         barStatusTag.className = 'status-tag local';
-        barStatusTag.textContent = 'Modo Local Ativo';
+        barStatusTag.textContent = 'Modo Local Resiliente';
       }
       if (barLiveFeedback) {
-        barLiveFeedback.textContent = 'Nenhuma chave externa enviada. O sistema processará com o motor semântico inteligente local.';
+        barLiveFeedback.textContent = 'Nenhuma chave ativa. O sistema opera com o motor semântico inteligente local da UniRV.';
       }
     }
   }
 
-  // Inicialização da chave a partir de localStorage e backend
-  const savedLocalKey = localStorage.getItem('gemini_api_key') || '';
-  if (savedLocalKey) {
-    if (barApiKeyInput) barApiKeyInput.value = savedLocalKey;
-    if (inputApiKey) inputApiKey.value = savedLocalKey;
-    atualizarStatusKeyInterface(savedLocalKey);
-  }
-
-  // Consulta status inicial no backend
+  // Verifica status seguro inicial no backend
   fetch('/api/configurar-chave/')
     .then(res => res.json())
     .then(data => {
-      if (data.configurada && !savedLocalKey) {
-        atualizarStatusKeyInterface(data.chave_mascarada);
-      } else if (savedLocalKey) {
-        atualizarStatusKeyInterface(savedLocalKey);
-      } else {
-        atualizarStatusKeyInterface('');
-      }
+      atualizarStatusKeyInterface(data.status === 'configurada');
     })
     .catch(() => {
-      atualizarStatusKeyInterface(savedLocalKey);
+      atualizarStatusKeyInterface(false);
     });
 
-  // Digitação em tempo real na Barra
-  if (barApiKeyInput) {
-    barApiKeyInput.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      if (inputApiKey) inputApiKey.value = val;
-
-      if (val.length > 0) {
-        typingLiveIndicator.classList.remove('hidden');
-        typingLiveText.textContent = `KEY em tempo real: ${mascararChave(val)} (${val.length} caracteres)`;
-      } else {
-        typingLiveIndicator.classList.add('hidden');
-      }
-    });
-  }
-
-  // Digitação em tempo real no Modal
-  if (inputApiKey) {
-    inputApiKey.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      if (barApiKeyInput) barApiKeyInput.value = val;
-
-      if (val.length > 0) {
-        modalRealtimeKeyPreview.textContent = `Pré-visualização: ${mascararChave(val)} (${val.length} caracteres)`;
-      } else {
-        modalRealtimeKeyPreview.textContent = 'Digite a chave para pré-visualizar em tempo real...';
-      }
-    });
-  }
-
-  // Alternar visibilidade da senha (olho)
-  function toggleVisibilidadeInput(inputEl, btnEl) {
-    if (inputEl.type === 'password') {
-      inputEl.type = 'text';
-      btnEl.textContent = '🔒';
-    } else {
-      inputEl.type = 'password';
-      btnEl.textContent = '👁️';
-    }
-  }
-
-  if (btnToggleBarEye && barApiKeyInput) {
-    btnToggleBarEye.addEventListener('click', () => {
-      toggleVisibilidadeInput(barApiKeyInput, btnToggleBarEye);
-    });
-  }
-
-  if (btnToggleModalEye && inputApiKey) {
-    btnToggleModalEye.addEventListener('click', () => {
-      toggleVisibilidadeInput(inputApiKey, btnToggleModalEye);
-    });
-  }
-
-  // ENVIAR CHAVE - Processa o envio e ativação imediata
-  async function enviarChave(chave) {
+  // Salvar Chave com Mascaramento Total
+  async function salvarChaveSegura(chave) {
     const val = (chave || '').trim();
-
-    if (val) {
-      localStorage.setItem('gemini_api_key', val);
-    } else {
-      localStorage.removeItem('gemini_api_key');
-    }
-
-    // Sincroniza campos
-    if (barApiKeyInput) barApiKeyInput.value = val;
-    if (inputApiKey) inputApiKey.value = val;
-    if (typingLiveIndicator) typingLiveIndicator.classList.add('hidden');
-
-    atualizarStatusKeyInterface(val);
-
     try {
       const resp = await fetch('/api/configurar-chave/', {
         method: 'POST',
@@ -198,74 +110,51 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ api_key: val })
       });
       const data = await resp.json();
-      showToast(data.mensagem || (val ? 'CHAVE enviada com sucesso!' : 'Chave removida.'));
+      atualizarStatusKeyInterface(Boolean(val));
+      if (barApiKeyInput) barApiKeyInput.value = '';
+      if (inputApiKey) inputApiKey.value = '';
+      showToast(data.mensagem || (val ? 'Chave salva com sucesso!' : 'Chave removida.'));
     } catch (err) {
-      showToast(val ? 'CHAVE salva no navegador com sucesso!' : 'Chave limpa.');
+      showToast('Erro ao atualizar chave.');
     }
   }
 
   if (btnEnviarChave) {
     btnEnviarChave.addEventListener('click', () => {
       const val = barApiKeyInput ? barApiKeyInput.value : '';
-      enviarChave(val);
-    });
-  }
-
-  if (btnDemoKey) {
-    btnDemoKey.addEventListener('click', () => {
-      enviarChave(DEMO_API_KEY);
-      showToast('Chave de Demonstração UniRV preenchida e ativada em tempo real!');
-    });
-  }
-
-  if (btnModalDemoKey) {
-    btnModalDemoKey.addEventListener('click', () => {
-      enviarChave(DEMO_API_KEY);
-      modalConfig.classList.add('hidden');
-      showToast('Chave de Demonstração UniRV ativada em tempo real!');
+      if (val) salvarChaveSegura(val);
     });
   }
 
   if (btnLimparChaveBar) {
     btnLimparChaveBar.addEventListener('click', () => {
-      enviarChave('');
+      salvarChaveSegura('');
     });
   }
 
   if (btnSaveKey) {
     btnSaveKey.addEventListener('click', () => {
       const val = inputApiKey ? inputApiKey.value : '';
-      enviarChave(val);
-      modalConfig.classList.add('hidden');
+      salvarChaveSegura(val);
+      if (modalConfig) modalConfig.classList.add('hidden');
     });
   }
 
   if (btnClearKey) {
     btnClearKey.addEventListener('click', () => {
-      enviarChave('');
-      modalConfig.classList.add('hidden');
+      salvarChaveSegura('');
+      if (modalConfig) modalConfig.classList.add('hidden');
     });
   }
 
-  // =========================================================================
-  // MODAL DE CONFIGURAÇÃO
-  // =========================================================================
-  if (btnToggleConfig) {
+  // Modal de Configuração
+  if (btnToggleConfig && modalConfig) {
     btnToggleConfig.addEventListener('click', () => {
       modalConfig.classList.remove('hidden');
-      const val = localStorage.getItem('gemini_api_key') || '';
-      if (inputApiKey) {
-        inputApiKey.value = val;
-        if (val) {
-          modalRealtimeKeyPreview.textContent = `Pré-visualização: ${mascararChave(val)} (${val.length} caracteres)`;
-        } else {
-          modalRealtimeKeyPreview.textContent = 'Digite a chave para pré-visualizar em tempo real...';
-        }
-      }
     });
   }
 
-  if (btnCloseConfig) {
+  if (btnCloseConfig && modalConfig) {
     btnCloseConfig.addEventListener('click', () => {
       modalConfig.classList.add('hidden');
     });
@@ -273,14 +162,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (modalConfig) {
     modalConfig.addEventListener('click', (e) => {
-      if (e.target === modalConfig) {
-        modalConfig.classList.add('hidden');
-      }
+      if (e.target === modalConfig) modalConfig.classList.add('hidden');
     });
   }
 
   // =========================================================================
-  // MANIPULAÇÃO DE ARQUIVOS (PDF) E DROPZONE
+  // ARQUIVOS (PDF) E DROPZONE
   // =========================================================================
   if (dropzone) {
     dropzone.addEventListener('dragover', (e) => {
@@ -299,6 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
         handleFileSelected(e.dataTransfer.files[0]);
       }
     });
+
+    dropzone.addEventListener('click', (e) => {
+      if (e.target.closest('#btn-remove-file')) return;
+      if (fileInput) fileInput.click();
+    });
   }
 
   if (fileInput) {
@@ -311,48 +203,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function handleFileSelected(file) {
     if (!file.name.toLowerCase().endsWith('.pdf')) {
-      alert('Por favor, selecione um arquivo em formato PDF.');
+      alert('Por favor, selecione exclusivamente um arquivo no formato PDF.');
       return;
     }
 
     currentFile = file;
     useSampleMode = false;
-    const sizeInMB = (file.size / (1024 * 1024)).toFixed(2);
 
-    fileNameDisplay.textContent = file.name;
-    badgeFileName.textContent = file.name;
-    badgeFileSize.textContent = `${sizeInMB} MB`;
-
-    fileSelectedBadge.classList.remove('hidden');
-    btnExtrair.removeAttribute('disabled');
+    if (badgeFileName) badgeFileName.textContent = file.name;
+    if (badgeFileSize) badgeFileSize.textContent = formatBytes(file.size);
+    if (fileSelectedBadge) fileSelectedBadge.classList.remove('hidden');
+    if (btnExtrair) btnExtrair.removeAttribute('disabled');
   }
 
   if (btnUseSample) {
     btnUseSample.addEventListener('click', () => {
-      useSampleMode = true;
       currentFile = null;
-      if (fileInput) fileInput.value = '';
+      useSampleMode = true;
 
-      const sampleName = 'danfe (ciclano - pecas).pdf';
-      fileNameDisplay.textContent = sampleName;
-      badgeFileName.textContent = sampleName;
-      badgeFileSize.textContent = '0.01 MB';
+      if (badgeFileName) badgeFileName.textContent = 'danfe (ciclano - pecas).pdf (Arquivo de Demonstração)';
+      if (badgeFileSize) badgeFileSize.textContent = '7.5 KB';
+      if (fileSelectedBadge) fileSelectedBadge.classList.remove('hidden');
+      if (btnExtrair) btnExtrair.removeAttribute('disabled');
 
-      fileSelectedBadge.classList.remove('hidden');
-      btnExtrair.removeAttribute('disabled');
-      showToast('Nota fiscal de teste carregada!');
+      showToast('Arquivo de teste oficial selecionado com sucesso!');
     });
   }
 
   if (btnRemoveFile) {
-    btnRemoveFile.addEventListener('click', () => {
+    btnRemoveFile.addEventListener('click', (e) => {
+      e.stopPropagation();
       currentFile = null;
       useSampleMode = false;
       if (fileInput) fileInput.value = '';
-      fileNameDisplay.textContent = 'Nenhum arquivo escolhido';
-      fileSelectedBadge.classList.add('hidden');
-      btnExtrair.setAttribute('disabled', 'true');
-      resultsSection.classList.add('hidden');
+      if (fileSelectedBadge) fileSelectedBadge.classList.add('hidden');
+      if (btnExtrair) btnExtrair.setAttribute('disabled', 'true');
+      if (resultsSection) resultsSection.classList.add('hidden');
     });
   }
 
@@ -365,9 +251,9 @@ document.addEventListener('DOMContentLoaded', () => {
       tabContents.forEach(c => c.classList.remove('active'));
 
       btn.classList.add('active');
-      const targetId = btn.getAttribute('data-target');
-      const targetContent = document.getElementById(targetId);
-      if (targetContent) targetContent.classList.add('active');
+      const tabTarget = btn.getAttribute('data-tab');
+      const content = document.getElementById(tabTarget);
+      if (content) content.classList.add('active');
     });
   });
 
@@ -382,20 +268,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       btnExtrair.setAttribute('disabled', 'true');
-      loadingIndicator.classList.remove('hidden');
-      resultsSection.classList.add('hidden');
+      if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+      if (resultsSection) resultsSection.classList.add('hidden');
+      if (boxSucessoLancamento) boxSucessoLancamento.classList.add('hidden');
 
       const formData = new FormData();
       if (useSampleMode) {
         formData.append('usar_exemplo', 'true');
       } else if (currentFile) {
         formData.append('pdf_file', currentFile);
-      }
-
-      // Envia a KEY ativa informada pelo usuário
-      const activeKey = localStorage.getItem('gemini_api_key') || (barApiKeyInput ? barApiKeyInput.value.trim() : '');
-      if (activeKey) {
-        formData.append('api_key', activeKey);
       }
 
       try {
@@ -411,103 +292,228 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const data = await response.json();
         lastExtractedData = data;
-        renderizarResultados(data);
 
-        loadingIndicator.classList.add('hidden');
-        resultsSection.classList.remove('hidden');
+        // Renderiza campos da 1ª etapa
+        renderizarCamposEtapa1(data);
+
+        // Dispara a consulta de banco de dados da 2ª Etapa
+        await consultarEntidadesEtapa2(data);
+
+        if (loadingIndicator) loadingIndicator.classList.add('hidden');
+        if (resultsSection) resultsSection.classList.remove('hidden');
         btnExtrair.removeAttribute('disabled');
 
         resultsSection.scrollIntoView({ behavior: 'smooth' });
 
       } catch (err) {
         console.error(err);
-        loadingIndicator.classList.add('hidden');
+        if (loadingIndicator) loadingIndicator.classList.add('hidden');
         btnExtrair.removeAttribute('disabled');
-        alert(`Falha na extração de dados: ${err.message}`);
+        alert(`Falha no processamento: ${err.message}`);
       }
     });
   }
 
   // =========================================================================
-  // RENDERIZAÇÃO DOS RESULTADOS EXTRAÍDOS
+  // ETAPA 2: CONSULTA NO BANCO DE DADOS (CONFORME PÁGINA 2 DO PDF)
   // =========================================================================
-  function renderizarResultados(data) {
-    // 1. Badge de modo de extração
+  async function consultarEntidadesEtapa2(data) {
+    try {
+      const payload = {
+        fornecedor_razao: data.fornecedor?.razaoSocial || data.fornecedor?.razao_social || '',
+        fornecedor_cnpj: data.fornecedor?.cnpj || '',
+        faturado_nome: data.faturado?.nomeCompleto || data.faturado?.nome_completo || '',
+        faturado_cpf: data.faturado?.cpf || '',
+        despesa_descricao: data.classificacaoDespesa || data.classificacao_despesa || ''
+      };
+
+      const res = await fetch('/api/consultar-entidades/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const consulta = await res.json();
+
+      // 1. Fornecedor
+      if (analiseFornNome) analiseFornNome.textContent = consulta.fornecedor.nome;
+      if (analiseFornDoc) analiseFornDoc.textContent = `CNPJ: ${consulta.fornecedor.documento || 'Não informado'}`;
+      if (pillFornStatus) {
+        pillFornStatus.textContent = consulta.fornecedor.status_texto;
+        pillFornStatus.className = `analysis-status-pill ${consulta.fornecedor.existe ? 'existe' : 'nao-existe'}`;
+      }
+
+      // 2. Faturado
+      if (analiseFatNome) analiseFatNome.textContent = consulta.faturado.nome;
+      if (analiseFatDoc) analiseFatDoc.textContent = `CPF: ${consulta.faturado.documento || 'Não informado'}`;
+      if (pillFatStatus) {
+        pillFatStatus.textContent = consulta.faturado.status_texto;
+        pillFatStatus.className = `analysis-status-pill ${consulta.faturado.existe ? 'existe' : 'nao-existe'}`;
+      }
+
+      // 3. Despesa
+      if (analiseDespNome) analiseDespNome.textContent = consulta.despesa.descricao;
+      if (pillDespStatus) {
+        pillDespStatus.textContent = consulta.despesa.status_texto;
+        pillDespStatus.className = `analysis-status-pill ${consulta.despesa.existe ? 'existe' : 'nao-existe'}`;
+      }
+
+    } catch (e) {
+      console.error('Erro na consulta de entidades:', e);
+    }
+  }
+
+  // =========================================================================
+  // ETAPA 2: BOTÃO LANÇAR MOVIMENTO NO BANCO DE DADOS
+  // =========================================================================
+  if (btnLancarMovimento) {
+    btnLancarMovimento.addEventListener('click', async () => {
+      if (!lastExtractedData) {
+        alert('Nenhum dado extraído disponível para lançamento.');
+        return;
+      }
+
+      btnLancarMovimento.setAttribute('disabled', 'true');
+      btnLancarMovimento.textContent = 'Gravando no Banco de Dados...';
+
+      try {
+        const res = await fetch('/api/lancar-movimento/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(lastExtractedData)
+        });
+        const resp = await res.json();
+
+        if (resp.sucesso) {
+          showToast(resp.mensagem);
+          if (boxSucessoLancamento) {
+            boxSucessoLancamento.classList.remove('hidden');
+            if (msgSucessoDetalhes) {
+              const det = resp.detalhes;
+              msgSucessoDetalhes.innerHTML = `
+                Movimento <strong>#${det.movimento_id}</strong> (Tipo: ${det.tipo}) cadastrado com sucesso!<br>
+                Fornecedor: <strong>${det.fornecedor.razao_social}</strong> (ID: ${det.fornecedor.id}) | 
+                Faturado: <strong>${det.faturado.razao_social}</strong> (ID: ${det.faturado.id})<br>
+                Despesa: <strong>${det.despesa.descricao}</strong> (ID: ${det.despesa.id}) | 
+                Total: <strong>R$ ${det.valor_total}</strong> (${det.parcelas.length} parcela(s)).
+              `;
+            }
+            boxSucessoLancamento.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          // Atualiza status das pills para EXISTE
+          if (pillFornStatus) {
+            pillFornStatus.textContent = `EXISTE – ID: ${resp.detalhes.fornecedor.id}`;
+            pillFornStatus.className = 'analysis-status-pill existe';
+          }
+          if (pillFatStatus) {
+            pillFatStatus.textContent = `EXISTE – ID: ${resp.detalhes.faturado.id}`;
+            pillFatStatus.className = 'analysis-status-pill existe';
+          }
+          if (pillDespStatus) {
+            pillDespStatus.textContent = `EXISTE – ID: ${resp.detalhes.despesa.id}`;
+            pillDespStatus.className = 'analysis-status-pill existe';
+          }
+
+        } else {
+          alert(resp.erro || 'Erro ao lançar movimento');
+        }
+
+      } catch (err) {
+        alert('Falha na comunicação ao lançar movimento');
+      } finally {
+        btnLancarMovimento.removeAttribute('disabled');
+        btnLancarMovimento.innerHTML = '<span>💾</span> <span>LANÇAR MOVIMENTO E PARCELAS NO BANCO DE DADOS (2ª ETAPA)</span>';
+      }
+    });
+  }
+
+  // =========================================================================
+  // RENDERIZAÇÃO DE CAMPOS (ETAPA 1)
+  // =========================================================================
+  function renderizarCamposEtapa1(data) {
     if (data._extracao_modo && modeText) {
       modeText.textContent = data._extracao_modo;
     }
 
-    // JSON limpo (sem chaves de controle com _)
     const cleanJson = {};
     for (const key in data) {
-      if (!key.startsWith('_')) {
-        cleanJson[key] = data[key];
-      }
+      if (!key.startsWith('_')) cleanJson[key] = data[key];
     }
-
-    // 2. Aba JSON
     if (jsonCodeDisplay) {
       jsonCodeDisplay.textContent = JSON.stringify(cleanJson, null, 2);
     }
 
-    // 3. Aba Visualização Formatada
+    // Metadados
+    setText('card-numero-nf', data.numero || '000.000');
+    setText('card-serie', data.serie || '1');
+    setText('card-emissao', formatarData(data.dataEmissao));
+    setText('card-vencimento', formatarData(data.dataVencimento));
+
     // Fornecedor
-    setText('disp-fornecedor-razao', data.fornecedor?.razaoSocial || data.fornecedor?.razao_social || 'Não identificado');
-    setText('disp-fornecedor-fantasia', data.fornecedor?.fantasia || data.fornecedor?.nome_fantasia || 'Não informado');
-    setText('disp-fornecedor-cnpj', data.fornecedor?.cnpj || 'Não informado');
+    setText('card-fornecedor-razao', data.fornecedor?.razaoSocial || 'Não identificado');
+    setText('card-fornecedor-fantasia', data.fornecedor?.fantasia || '-');
+    setText('card-fornecedor-cnpj', data.fornecedor?.cnpj || '-');
 
     // Faturado
-    setText('disp-faturado-nome', data.faturado?.nomeCompleto || data.faturado?.nome_completo || 'Não identificado');
-    setText('disp-faturado-cpf', data.faturado?.cpf || 'Não informado');
+    setText('card-faturado-nome', data.faturado?.nomeCompleto || 'Não identificado');
+    setText('card-faturado-cpf', data.faturado?.cpf || '-');
 
-    // Dados da NF
-    setText('disp-nf-numero', data.numero || data.numero_nota_fiscal || '000.000');
-    setText('disp-nf-serie', data.serie || '1');
-    setText('disp-nf-emissao', formatarData(data.dataEmissao || data.data_emissao));
-    setText('disp-nf-vencimento', formatarData(data.dataVencimento || data.data_vencimento));
-    setText('disp-nf-parcelas', `${data.quantidadeParcelas || data.quantidade_parcelas || 1} parcela(s)`);
+    // Classificação
+    setText('card-classificacao', data.classificacaoDespesa || 'MANUTENÇÃO E OPERAÇÃO');
+    setText('card-justificativa', data.justificativaClassificacao || 'Inferência semântica realizada com sucesso.');
 
-    // Valor Total
-    const valor = Number(data.valorTotal || data.valor_total || 0);
-    setText('disp-nf-total', formatarMoeda(valor));
-
-    // Classificação da Despesa
-    const categoria = data.classificacaoDespesa || data.classificacao_despesa || 'OUTRAS';
-    setText('disp-classificacao-tag', categoria);
-
-    const subcat = data.detalhesClassificacao?.subcategoria || 'Geral';
-    setText('disp-subcategoria', subcat);
-
-    const justificativa = data.justificativaClassificacao || data.detalhesClassificacao?.justificativa || 'Classificação semântica automática.';
-    setText('disp-justificativa', justificativa);
+    // Valores e Parcelas
+    const valor = Number(data.valorTotal || 0);
+    setText('card-valor-total', formatarMoeda(valor));
+    setText('card-parcelas', `${data.quantidadeParcelas || 1} parcela(s)`);
 
     // Tabela de Produtos
     const tbody = document.getElementById('products-table-body');
+    const productsCount = document.getElementById('products-count');
     if (tbody) {
       tbody.innerHTML = '';
       const produtos = data.produtos || [];
+      if (productsCount) productsCount.textContent = `${produtos.length} itens`;
 
       if (produtos.length === 0 && data.descricaoProdutos) {
         const row = document.createElement('tr');
         row.innerHTML = `
+          <td>1</td>
           <td>${data.descricaoProdutos}</td>
           <td style="text-align: center;">1</td>
           <td style="text-align: right; font-family: var(--font-mono);">${formatarMoeda(valor)}</td>
         `;
         tbody.appendChild(row);
       } else {
-        produtos.forEach(prod => {
+        produtos.forEach((p, idx) => {
           const row = document.createElement('tr');
-          const valProd = Number(prod.valorTotal || prod.valor || 0);
           row.innerHTML = `
-            <td><strong>${prod.descricao || prod.nome || 'Item sem descrição'}</strong></td>
-            <td style="text-align: center; font-family: var(--font-mono);">${prod.quantidade || 1}</td>
-            <td style="text-align: right; font-family: var(--font-mono); font-weight: 500;">${formatarMoeda(valProd)}</td>
+            <td>${idx + 1}</td>
+            <td><strong>${p.descricao || 'Item sem descrição'}</strong></td>
+            <td style="text-align: center;">${p.quantidade || 1}</td>
+            <td style="text-align: right; font-family: var(--font-mono);">${formatarMoeda(p.valorTotal || 0)}</td>
           `;
           tbody.appendChild(row);
         });
       }
     }
+  }
+
+  // =========================================================================
+  // COPIAR JSON & UTILITÁRIOS
+  // =========================================================================
+  if (btnCopyJson && jsonCodeDisplay) {
+    btnCopyJson.addEventListener('click', () => {
+      navigator.clipboard.writeText(jsonCodeDisplay.textContent)
+        .then(() => {
+          if (copyBtnText) copyBtnText.textContent = '✓ Copiado!';
+          showToast('JSON copiado para a área de transferência!');
+          setTimeout(() => {
+            if (copyBtnText) copyBtnText.textContent = '📋 Copiar JSON';
+          }, 2500);
+        })
+        .catch(() => alert('Falha ao copiar JSON.'));
+    });
   }
 
   function setText(id, text) {
@@ -516,47 +522,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function formatarMoeda(valor) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
   }
 
   function formatarData(dataStr) {
     if (!dataStr) return '-';
-    if (dataStr.includes('/')) return dataStr;
-    const partes = dataStr.split('-');
-    if (partes.length === 3) {
-      return `${partes[2]}/${partes[1]}/${partes[0]}`;
-    }
+    try {
+      const [ano, mes, dia] = dataStr.substring(0, 10).split('-');
+      if (ano && mes && dia) return `${dia}/${mes}/${ano}`;
+    } catch (e) {}
     return dataStr;
   }
 
-  // =========================================================================
-  // COPIAR JSON
-  // =========================================================================
-  if (btnCopyJson) {
-    btnCopyJson.addEventListener('click', async () => {
-      const code = jsonCodeDisplay.textContent;
-      try {
-        await navigator.clipboard.writeText(code);
-        copyBtnText.textContent = 'Copiado!';
-        showToast('JSON copiado para a área de transferência!');
-        setTimeout(() => {
-          copyBtnText.textContent = 'Copiar JSON';
-        }, 2500);
-      } catch (err) {
-        showToast('Falha ao copiar.');
-      }
-    });
+  function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
-  // =========================================================================
-  // TOAST NOTIFICATION
-  // =========================================================================
-  function showToast(mensagem) {
+  window.showToast = function(msg) {
     if (!toast) return;
-    toast.textContent = mensagem;
+    toast.textContent = msg;
     toast.classList.remove('hidden');
+    toast.classList.add('show');
     setTimeout(() => {
-      toast.classList.add('hidden');
-    }, 3200);
-  }
+      toast.classList.remove('show');
+      setTimeout(() => toast.classList.add('hidden'), 300);
+    }, 3500);
+  };
 });
