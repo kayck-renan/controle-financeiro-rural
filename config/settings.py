@@ -76,8 +76,11 @@ IS_VERCEL = bool(os.environ.get("VERCEL"))
 if IS_VERCEL:
     tmp_db = Path("/tmp/db.sqlite3")
     orig_db = BASE_DIR / "db.sqlite3"
-    if not tmp_db.exists() and orig_db.exists():
-        shutil.copy2(orig_db, tmp_db)
+    if orig_db.exists() and (not tmp_db.exists() or tmp_db.stat().st_size == 0):
+        try:
+            shutil.copy2(orig_db, tmp_db)
+        except Exception:
+            pass
     DB_PATH = tmp_db
 else:
     DB_PATH = BASE_DIR / 'db.sqlite3'
@@ -119,6 +122,16 @@ WHITENOISE_USE_FINDERS = True
 LOGIN_URL = 'extrator_fiscal:login'
 LOGIN_REDIRECT_URL = 'extrator_fiscal:index'
 LOGOUT_REDIRECT_URL = 'extrator_fiscal:login'
+
+# Sessões persistentes e resilientes a ambientes serverless (Vercel) e locais
+# Utiliza cookies assinados criptograficamente para evitar perda de sessão entre lambdas efêmeras
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+SESSION_COOKIE_NAME = 'rural_sessionid'
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # 30 dias
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_SAVE_EVERY_REQUEST = True
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 # Upload limits
 FILE_UPLOAD_MAX_MEMORY_SIZE = 15728640  # 15 MB

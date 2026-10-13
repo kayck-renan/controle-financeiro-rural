@@ -1,4 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // =========================================================================
+  // ALTERNÂNCIA DE TEMA (CLARO / ESCURO)
+  // =========================================================================
+  const btnThemeToggle = document.getElementById('btn-theme-toggle');
+  const themeToggleText = document.getElementById('theme-toggle-text');
+
+  function aplicarTema(tema) {
+    document.documentElement.setAttribute('data-theme', tema);
+    document.body.setAttribute('data-theme', tema);
+    try {
+      localStorage.setItem('rural_theme', tema);
+    } catch (e) {}
+    if (themeToggleText) {
+      themeToggleText.textContent = tema === 'dark' ? 'Modo Escuro' : 'Modo Claro';
+    }
+  }
+
+  const temaInicial = document.documentElement.getAttribute('data-theme') || 'light';
+  aplicarTema(temaInicial);
+
+  if (btnThemeToggle) {
+    btnThemeToggle.addEventListener('click', () => {
+      const temaAtual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+      const novoTema = temaAtual === 'dark' ? 'light' : 'dark';
+      aplicarTema(novoTema);
+    });
+  }
+
   // Elementos do DOM - Arquivo & Upload
   const fileInput = document.getElementById('file-input');
   const dropzone = document.getElementById('dropzone');

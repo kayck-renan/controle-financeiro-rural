@@ -8,21 +8,35 @@
   <!-- Google Fonts: Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <script>
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('rural_theme');
+        if (savedTheme) {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch (e) {}
+    })();
+  </script>
   {% block extra_head %}{% endblock %}
 </head>
 <body>
-  <!-- Header Acadêmico Superior -->
+  <!-- Header Superior Moderno -->
   <header class="top-nav">
-    <div class="nav-container" style="max-width: 100%;">
+    <div class="nav-container">
       <div class="brand">
-        <span class="brand-badge">UniRV • DOO</span>
-        <span class="brand-title">Sistema de Controle Financeiro Rural</span>
+        <span class="brand-badge">🌾 UniRV • DOO</span>
+        <span class="brand-title">Controle Financeiro Rural</span>
       </div>
 
       <div class="nav-meta">
-        <!-- Código Última Atualização no GitHub (Exigência do Professor / Aluno) -->
+        <!-- Código Última Atualização no GitHub -->
         <div class="github-commit-badge" title="Código da Última Atualização no GitHub">
           <span class="gh-icon">🐙</span>
           <span class="gh-label">Código Última Atualização:</span>
@@ -33,7 +47,14 @@
 
         <span class="tag-etapa">Avaliação N2 • Etapa 2</span>
 
-        <!-- Status Seguro da Chave LLM (Oculta por Segurança) -->
+        <!-- Botão Alternador Modo Claro / Escuro -->
+        <button id="btn-theme-toggle" class="btn-theme-toggle" type="button" title="Alternar entre modo claro e escuro" aria-label="Alternar Tema">
+          <span class="theme-icon theme-sun">☀️</span>
+          <span class="theme-icon theme-moon">🌙</span>
+          <span class="theme-toggle-text" id="theme-toggle-text">Tema</span>
+        </button>
+
+        <!-- Status Seguro da Chave LLM -->
         <div id="key-live-pill" class="key-pill" title="Status Seguro da Chave da API">
           <span class="pulse-dot-small" id="pill-dot"></span>
           <span id="pill-text">Chave: Protegida</span>
@@ -45,14 +66,17 @@
 
         <!-- Informações do Usuário Autenticado -->
         <div class="user-pill">
-          <span class="user-pill-name">👤 {{ usuario_logado }}</span>
-          <a href="{% url 'extrator_fiscal:logout' %}" class="btn-logout-small" title="Encerrar Sessão">Sair</a>
+          <div class="user-avatar-circle">KR</div>
+          <span class="user-pill-name">{{ usuario_logado }}</span>
+          <a href="{% url 'extrator_fiscal:logout' %}" class="btn-logout-small" title="Encerrar Sessão">
+            <span>Sair</span> 🚪
+          </a>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Modal / Painel de Configuração da Chave Gemini (Protegido e Mascarado) -->
+  <!-- Modal de Configuração da Chave Gemini -->
   <div id="modal-config" class="modal-overlay hidden">
     <div class="modal-card">
       <div class="modal-header">
@@ -61,7 +85,7 @@
       </div>
       <div class="modal-body">
         <p class="modal-text">
-          Por questões de segurança, a chave da API é transmitida de forma criptografada e armazenada de forma segura, permanecendo oculta contra visualização indevida.
+          Por questões de segurança, a chave da API permanece estritamente protegida no ambiente seguro, sendo transmitida criptografada e oculta contra visualização indevida.
         </p>
         <div class="form-group">
           <label for="input-api-key">Atualizar Chave da API Gemini (Oculta):</label>
@@ -82,22 +106,23 @@
 
   <!-- Layout com Sidebar e Área de Conteúdo -->
   <div class="app-wrapper">
-    <!-- Sidebar estilo Projeto TFC / UniRV (Página 5 do PDF) -->
+    <!-- Sidebar SaaS Moderna -->
     <aside class="app-sidebar">
       <div class="sidebar-header">
-        <span class="sidebar-logo-icon">🌾</span>
+        <div class="sidebar-logo-badge">🌾</div>
         <div>
           <div class="sidebar-app-title">Controle Rural</div>
-          <div class="sidebar-app-sub">Gestão Financeira & DOO</div>
+          <div class="sidebar-app-sub">Gestão Financeira & Fiscal</div>
         </div>
       </div>
 
       <div class="sidebar-user-card">
-        <span class="sidebar-user-role">Autenticado</span>
-        <span class="sidebar-user-name">{{ usuario_logado }}</span>
+        <div class="sidebar-user-role">Sessão Autenticada</div>
+        <div class="sidebar-user-name">{{ usuario_logado }}</div>
       </div>
 
       <nav class="sidebar-nav">
+        <div class="sidebar-nav-heading">PRINCIPAL</div>
         <a href="{% url 'extrator_fiscal:dashboard' %}" class="sidebar-nav-item {% if pagina_ativa == 'dashboard' %}active{% endif %}">
           <span class="sidebar-nav-icon">📊</span>
           <span>Dashboard</span>
@@ -108,6 +133,7 @@
           <span>Extrator Fiscal</span>
         </a>
 
+        <div class="sidebar-nav-heading">CADASTROS (PESSOAS & MACRO)</div>
         <a href="{% url 'extrator_fiscal:pessoas' %}" class="sidebar-nav-item {% if pagina_ativa == 'pessoas' %}active{% endif %}">
           <span class="sidebar-nav-icon">👥</span>
           <span>Manter Pessoas</span>
@@ -118,6 +144,7 @@
           <span>Classificações</span>
         </a>
 
+        <div class="sidebar-nav-heading">FINANCEIRO (CONTAS)</div>
         <a href="{% url 'extrator_fiscal:contas_pagar' %}" class="sidebar-nav-item {% if pagina_ativa == 'contas_pagar' %}active{% endif %}">
           <span class="sidebar-nav-icon">💳</span>
           <span>Contas a Pagar</span>
@@ -130,12 +157,12 @@
       </nav>
 
       <div class="sidebar-footer">
-        <div><strong>UniRV</strong> - Faculdade DOO</div>
-        <div>GitHub Commit: <code>{{ git_commit_hash }}</code></div>
+        <div style="font-weight:600; color:#cbd5e1;">UniRV — DOO 2026</div>
+        <div>Git Commit: <code>{{ git_commit_hash }}</code></div>
       </div>
     </aside>
 
-    <!-- Área de Conteúdo -->
+    <!-- Área de Conteúdo Principal -->
     <main class="app-content">
       {% block content %}{% endblock %}
     </main>
@@ -144,6 +171,8 @@
   <!-- Toast de Notificações -->
   <div id="toast" class="toast hidden"></div>
 
+  <!-- Scripts Globais -->
+  <script src="{% static 'js/validators.js' %}"></script>
   <script src="{% static 'js/app.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>

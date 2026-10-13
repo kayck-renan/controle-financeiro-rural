@@ -9,7 +9,7 @@
   <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
     <div>
       <h1 class="main-title" style="margin-bottom:0.25rem;">👥 Manter Pessoas</h1>
-      <p style="color:#64748b; font-size:0.95rem;">Gestão de Fornecedores, Clientes e Faturados do Sistema.</p>
+      <p style="color:#64748b; font-size:0.95rem;">Gestão de Fornecedores, Clientes e Faturados do Sistema com validação em tempo real.</p>
     </div>
 
     <!-- Badge do Commit do GitHub -->
@@ -22,11 +22,11 @@
     </div>
   </div>
 
-  <!-- Barra de Filtros e Busca (Conforme Regra do Layout - Página 4 do PDF) -->
+  <!-- Barra de Filtros e Busca (Página 4 do PDF) -->
   <div class="crud-toolbar">
     <div class="crud-search-group">
       <input type="text" id="input-busca-pessoas" class="crud-search-input" placeholder="Buscar por Razão Social, Fantasia, CPF/CNPJ ou ID...">
-      <select id="select-filtro-tipo" class="crud-search-input" style="max-width: 160px;">
+      <select id="select-filtro-tipo" class="crud-search-input" style="max-width: 170px;">
         <option value="">Todos os Tipos</option>
         <option value="FORNECEDOR">Fornecedor</option>
         <option value="CLIENTE">Cliente</option>
@@ -61,7 +61,7 @@
             <th>Tipo</th>
             <th>Telefone / E-mail</th>
             <th style="text-align:center;">Status</th>
-            <th style="text-align:center; width: 160px;">Ações</th>
+            <th style="text-align:center; width: 170px;">Ações</th>
           </tr>
         </thead>
         <tbody id="tbody-pessoas">
@@ -86,7 +86,7 @@
       <h3 id="modal-pessoa-title">Inserir Nova Pessoa</h3>
       <button type="button" id="btn-close-modal-pessoa" class="btn-close">&times;</button>
     </div>
-    <form id="form-pessoa">
+    <form id="form-pessoa" novalidate>
       <!-- ID oculto para edição -->
       <input type="hidden" id="pessoa-id" value="">
       <!-- STATUS oculto: Regra da Página 4 (No CREATE campo STATUS oculto == ATIVO; No UPDATE campo STATUS oculto) -->
@@ -95,17 +95,19 @@
       <div class="modal-body">
         <div class="form-group" style="margin-bottom:1rem;">
           <label for="pessoa-razao">Razão Social / Nome Completo *:</label>
-          <input type="text" id="pessoa-razao" class="crud-search-input" style="width:100%;" required placeholder="Ex: IGUAÇU MAQUINAS AGRICOLAS LTDA">
+          <input type="text" id="pessoa-razao" maxlength="255" class="crud-search-input" style="width:100%;" required placeholder="Ex: IGUAÇU MAQUINAS AGRICOLAS LTDA">
+          <small class="field-feedback" id="feedback-razao"></small>
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
           <div class="form-group">
             <label for="pessoa-fantasia">Nome Fantasia:</label>
-            <input type="text" id="pessoa-fantasia" class="crud-search-input" style="width:100%;" placeholder="Ex: Iguaçu Peças">
+            <input type="text" id="pessoa-fantasia" maxlength="255" class="crud-search-input" style="width:100%;" placeholder="Ex: Iguaçu Peças">
           </div>
           <div class="form-group">
-            <label for="pessoa-cpf-cnpj">CPF / CNPJ:</label>
-            <input type="text" id="pessoa-cpf-cnpj" class="crud-search-input" style="width:100%;" placeholder="00.000.000/0000-00">
+            <label for="pessoa-cpf-cnpj">CPF / CNPJ *:</label>
+            <input type="text" id="pessoa-cpf-cnpj" maxlength="18" class="crud-search-input" style="width:100%; font-family:var(--font-mono);" placeholder="000.000.000-00 ou CNPJ" required>
+            <small class="field-feedback" id="feedback-cpf-cnpj"></small>
           </div>
         </div>
 
@@ -121,19 +123,23 @@
           </div>
           <div class="form-group">
             <label for="pessoa-telefone">Telefone:</label>
-            <input type="text" id="pessoa-telefone" class="crud-search-input" style="width:100%;" placeholder="(64) 99999-0000">
+            <input type="tel" id="pessoa-telefone" maxlength="15" class="crud-search-input" style="width:100%; font-family:var(--font-mono);" placeholder="(00) 00000-0000">
+            <small class="field-feedback" id="feedback-telefone"></small>
           </div>
         </div>
 
         <div class="form-group">
           <label for="pessoa-email">E-mail:</label>
-          <input type="email" id="pessoa-email" class="crud-search-input" style="width:100%;" placeholder="contato@empresa.com.br">
+          <input type="email" id="pessoa-email" maxlength="255" class="crud-search-input" style="width:100%;" placeholder="contato@empresa.com.br">
+          <small class="field-feedback" id="feedback-email"></small>
         </div>
       </div>
 
       <div class="modal-footer">
         <button type="button" id="btn-cancelar-pessoa" class="btn-secondary">Cancelar</button>
-        <button type="submit" id="btn-salvar-pessoa" class="btn-primary">Salvar</button>
+        <button type="submit" id="btn-salvar-pessoa" class="btn-primary">
+          <span id="btn-salvar-pessoa-text">Salvar Pessoa</span>
+        </button>
       </div>
     </form>
   </div>
@@ -154,6 +160,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCloseModal = document.getElementById('btn-close-modal-pessoa');
   const btnCancelar = document.getElementById('btn-cancelar-pessoa');
   const formPessoa = document.getElementById('form-pessoa');
+  const btnSalvarPessoa = document.getElementById('btn-salvar-pessoa');
+  const btnSalvarPessoaText = document.getElementById('btn-salvar-pessoa-text');
+
+  const inputCpfCnpj = document.getElementById('pessoa-cpf-cnpj');
+  const feedbackCpfCnpj = document.getElementById('feedback-cpf-cnpj');
+  const inputTelefone = document.getElementById('pessoa-telefone');
+  const feedbackEmail = document.getElementById('feedback-email');
+  // Inicializa máscaras automáticas
+  if (window.RuralValidators) {
+    RuralValidators.aplicarMascaraCpfCnpj(inputCpfCnpj, feedbackCpfCnpj);
+    RuralValidators.aplicarMascaraTelefone(inputTelefone);
+  }
+
+  // Validação em tempo real do e-mail
+  if (inputEmail && feedbackEmail) {
+    inputEmail.addEventListener('input', () => {
+      const val = inputEmail.value.trim();
+      feedbackEmail.innerHTML = '';
+      inputEmail.classList.remove('input-error', 'input-success');
+      if (val) {
+        if (window.RuralValidators && RuralValidators.validarEmail(val)) {
+          inputEmail.classList.add('input-success');
+          feedbackEmail.innerHTML = '<span class="text-success">✓ E-mail com formato válido</span>';
+        } else {
+          inputEmail.classList.add('input-error');
+          feedbackEmail.innerHTML = '<span class="text-danger">⚠ Formato de e-mail inválido</span>';
+        }
+      }
+    });
+  }
 
   // Carrega registros da API
   async function carregarPessoas(params = {}) {
@@ -181,18 +217,18 @@ document.addEventListener('DOMContentLoaded', () => {
         <td><strong>#${p.id}</strong></td>
         <td><strong>${p.razao_social}</strong></td>
         <td>${p.nome_fantasia}</td>
-        <td><code>${p.cpf_cnpj}</code></td>
+        <td><code style="font-size:0.8rem;">${p.cpf_cnpj}</code></td>
         <td><span class="badge-status" style="background:#e0e7ff; color:#3730a3;">${p.tipo_display}</span></td>
-        <td><small>${p.telefone} / ${p.email}</small></td>
+        <td><small style="color:#64748b;">${p.telefone} / ${p.email}</small></td>
         <td style="text-align:center;">
           <span class="badge-status ${isAtivo ? 'ativo' : 'inativo'}">${p.status}</span>
         </td>
         <td style="text-align:center;">
           <div class="table-actions" style="justify-content:center;">
-            <button class="btn-action-sm btn-edit" onclick="editarPessoa(${JSON.stringify(p).replace(/"/g, '&quot;')})">Editar</button>
+            <button class="btn-action-sm btn-edit" onclick="editarPessoa(${JSON.stringify(p).replace(/"/g, '&quot;')})">✏️ Editar</button>
             ${isAtivo 
-              ? `<button class="btn-action-sm btn-delete" onclick="inativarPessoa(${p.id}, '${p.razao_social.replace(/'/g, "\\'")}')">Excluir</button>`
-              : `<button class="btn-action-sm btn-reactivate" onclick="reativarPessoa(${p.id}, '${p.razao_social.replace(/'/g, "\\'")}')">Reativar</button>`
+              ? `<button class="btn-action-sm btn-delete" onclick="inativarPessoa(${p.id}, '${p.razao_social.replace(/'/g, "\\'")}')">🚫 Inativar</button>`
+              : `<button class="btn-action-sm btn-reactivate" onclick="reativarPessoa(${p.id}, '${p.razao_social.replace(/'/g, "\\'")}')">🔄 Reativar</button>`
             }
           </div>
         </td>
@@ -201,7 +237,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Ações de Busca e Botão TODOS
   btnBuscar.addEventListener('click', () => {
     carregarPessoas({ q: inputBusca.value.trim(), tipo: selectTipo.value });
   });
@@ -218,7 +253,6 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarPessoas({ todos: 'true' });
   });
 
-  // Modal Novo / Edição
   btnNovo.addEventListener('click', () => {
     document.getElementById('modal-pessoa-title').textContent = 'Inserir Nova Pessoa';
     document.getElementById('pessoa-id').value = '';
@@ -229,7 +263,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pessoa-telefone').value = '';
     document.getElementById('pessoa-email').value = '';
     document.getElementById('pessoa-status').value = 'ATIVO';
+    if (feedbackCpfCnpj) feedbackCpfCnpj.innerHTML = '';
+    if (feedbackEmail) feedbackEmail.innerHTML = '';
+    inputCpfCnpj.classList.remove('input-error', 'input-success');
     modalPessoa.classList.remove('hidden');
+    document.getElementById('pessoa-razao').focus();
   });
 
   function fecharModal() {
@@ -247,6 +285,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pessoa-tipo').value = p.tipo;
     document.getElementById('pessoa-telefone').value = p.telefone !== '-' ? p.telefone : '';
     document.getElementById('pessoa-email').value = p.email !== '-' ? p.email : '';
+    if (feedbackCpfCnpj) feedbackCpfCnpj.innerHTML = '';
+    if (feedbackEmail) feedbackEmail.innerHTML = '';
+    if (window.RuralValidators && p.cpf_cnpj && p.cpf_cnpj !== '-') {
+      inputCpfCnpj.dispatchEvent(new Event('input'));
+    }
+    if (window.RuralValidators && p.telefone && p.telefone !== '-') {
+      inputTelefone.dispatchEvent(new Event('input'));
+    }
     modalPessoa.classList.remove('hidden');
   };
 
@@ -279,16 +325,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
   formPessoa.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const razao = document.getElementById('pessoa-razao').value.trim();
+    if (!razao) {
+      alert('Razão Social / Nome Completo é obrigatório.');
+      document.getElementById('pessoa-razao').focus();
+      return;
+    }
+
+    const doc = inputCpfCnpj.value.trim();
+    const digitosDoc = window.RuralValidators ? RuralValidators.somenteDigitos(doc) : doc.replace(/\D/g, '');
+
+    // Validação estrita de CPF/CNPJ se informado
+    if (digitosDoc.length > 0) {
+      if (digitosDoc.length === 11) {
+        if (!RuralValidators.validarCpf(digitosDoc)) {
+          alert('O CPF informado possui dígitos verificadores inválidos.');
+          inputCpfCnpj.focus();
+          return;
+        }
+      } else if (digitosDoc.length === 14) {
+        if (!RuralValidators.validarCnpj(digitosDoc)) {
+          alert('O CNPJ informado possui dígitos verificadores inválidos.');
+          inputCpfCnpj.focus();
+          return;
+        }
+      } else {
+        alert('Documento incompleto. Informe um CPF válido (11 dígitos) ou CNPJ válido (14 dígitos).');
+        inputCpfCnpj.focus();
+        return;
+      }
+    }
+
+    const emailVal = inputEmail.value.trim();
+    if (emailVal && !RuralValidators.validarEmail(emailVal)) {
+      alert('Por favor, informe um endereço de e-mail válido.');
+      inputEmail.focus();
+      return;
+    }
+
     const payload = {
       id: document.getElementById('pessoa-id').value || null,
-      razao_social: document.getElementById('pessoa-razao').value.trim(),
+      razao_social: razao,
       nome_fantasia: document.getElementById('pessoa-fantasia').value.trim(),
-      cpf_cnpj: document.getElementById('pessoa-cpf-cnpj').value.trim(),
+      cpf_cnpj: doc,
       tipo: document.getElementById('pessoa-tipo').value,
-      telefone: document.getElementById('pessoa-telefone').value.trim(),
-      email: document.getElementById('pessoa-email').value.trim(),
-      status: 'ATIVO' // Campo oculto conforme regra
+      telefone: inputTelefone.value.trim(),
+      email: emailVal,
+      status: 'ATIVO'
     };
+
+    // Previne envio duplicado
+    btnSalvarPessoa.setAttribute('disabled', 'true');
+    btnSalvarPessoaText.textContent = 'Salvando...';
 
     try {
       const res = await fetch('/api/pessoas/salvar/', {
@@ -306,6 +394,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) {
       alert('Erro na requisição');
+    } finally {
+      btnSalvarPessoa.removeAttribute('disabled');
+      btnSalvarPessoaText.textContent = 'Salvar Pessoa';
     }
   });
 });
