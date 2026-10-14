@@ -202,6 +202,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  let abortController = null;
+  let activeRequestId = 0;
+
+  function salvarEstadoFiltros() {
+    try {
+      const estado = {
+        status: selectStatus ? selectStatus.value : 'TODOS',
+        tipo: selectTipo ? selectTipo.value : '',
+        q: inputBusca ? inputBusca.value.trim() : ''
+      };
+      sessionStorage.setItem('rural_filtro_pessoas', JSON.stringify(estado));
+    } catch (e) {}
+  }
+
+  function restaurarEstadoFiltros() {
+    try {
+      const salvo = sessionStorage.getItem('rural_filtro_pessoas');
+      if (salvo) {
+        const estado = JSON.parse(salvo);
+        if (selectStatus && estado.status !== undefined) selectStatus.value = estado.status;
+        if (selectTipo && estado.tipo !== undefined) selectTipo.value = estado.tipo;
+        if (inputBusca && estado.q !== undefined) inputBusca.value = estado.q;
+      }
+    } catch (e) {}
+  }
+
   function obterFiltrosAtuais(limparTermo = false) {
     if (limparTermo) {
       inputBusca.value = '';
@@ -220,21 +246,44 @@ document.addEventListener('DOMContentLoaded', () => {
     return params;
   }
 
-  // Carrega registros da API
+  // Carrega registros da API com proteção contra concorrência e sem cache
   async function carregarPessoas(params = {}) {
+    if (abortController) {
+      abortController.abort();
+    }
+    abortController = new AbortController();
+    const currentId = ++activeRequestId;
+
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#64748b;"><span class="spinner" style="margin-right:8px;"></span>Carregando registros...</td></tr>';
-    const query = new URLSearchParams(params).toString();
+    
+    const fullParams = Object.assign({}, params, { _t: Date.now() });
+    const query = new URLSearchParams(fullParams).toString();
+
     try {
-      const res = await fetch(`/api/pessoas/listar/?${query}`);
+      const res = await fetch(`/api/pessoas/listar/?${query}`, {
+        signal: abortController.signal,
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
       const data = await res.json();
+
+      // Se outra consulta mais recente foi iniciada, descarta resposta defasada
+      if (currentId !== activeRequestId) return;
+
       if (!data.registros || data.registros.length === 0) {
         const statusTexto = selectStatus ? selectStatus.options[selectStatus.selectedIndex].text : '';
         tbody.innerHTML = `<tr><td colspan="8" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhum registro encontrado para os critérios informados (${statusTexto}).</p></td></tr>`;
         return;
       }
       renderTabela(data.registros);
+      salvarEstadoFiltros();
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ef4444; padding:2rem;">Erro ao carregar registros.</td></tr>`;
+      if (e.name === 'AbortError') return;
+      if (currentId !== activeRequestId) return;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#ef4444; padding:2rem;">Erro ao carregar registros. <button type="button" class="btn-action-sm btn-edit" style="margin-left:8px;" onclick="carregarPessoas(obterFiltrosAtuais(false))">Tentar novamente</button></td></tr>`;
     }
   }
 
@@ -474,6 +523,15 @@ document.addEventListener('DOMContentLoaded', () => {
       btnSalvarPessoa.removeAttribute('disabled');
       btnSalvarPessoaText.textContent = 'Salvar Pessoa';
     }
+  });
+
+  // Inicialização automática ao entrar na aba (Requisitos 1 e 4)
+  restaurarEstadoFiltros();
+  carregarPessoas(obterFiltrosAtuais(false));
+
+  // Ao retornar via histórico ou navegação de abas do navegador (bfcache)
+  window.addEventListener('pageshow', () => {
+    carregarPessoas(obterFiltrosAtuais(false));
   });
 });
 </script>

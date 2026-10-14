@@ -9,12 +9,14 @@ from django.http import JsonResponse, HttpResponse, FileResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
 from django.conf import settings
 from django.db.models import Q, Sum, Count
 from django.utils import timezone
 
 from .gemini_service import GeminiExtractionService
 from .models import Pessoas, Classificacao, MovimentoContas, ParcelaContas
+from .sync_manager import registrar_mutacao
 
 logger = logging.getLogger(__name__)
 
@@ -291,6 +293,7 @@ def consultar_entidades_api(request):
     })
 
 
+@never_cache
 @csrf_exempt
 def lancar_movimento_etapa2(request):
     """
@@ -454,6 +457,14 @@ def lancar_movimento_etapa2(request):
         # =========================================================================
         # PASSO 5: INFORMAR AO USUÁRIO QUE REGISTRO FOI LANÇADO COM SUCESSO
         # =========================================================================
+        if criou_fornecedor:
+            registrar_mutacao(request, 'PESSOA', fornecedor)
+        if criou_faturado:
+            registrar_mutacao(request, 'PESSOA', faturado)
+        if criou_despesa:
+            registrar_mutacao(request, 'CLASSIFICACAO', despesa)
+        registrar_mutacao(request, 'MOVIMENTO', movimento)
+
         return JsonResponse({
             "sucesso": True,
             "mensagem": "Registro de Movimento e Parcela(s) lançado com sucesso no Banco de Dados!",
@@ -490,6 +501,7 @@ def lancar_movimento_etapa2(request):
 # DASHBOARD
 # ==============================================================================
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def dashboard_view(request):
     """Exibe o Dashboard executivo com estatísticas do agronegócio."""
@@ -518,6 +530,7 @@ def dashboard_view(request):
 # CRUD: MANTER PESSOAS (FORNECEDOR, CLIENTE, FATURADO)
 # ==============================================================================
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def pessoas_view(request):
     """Renderiza a tela de gestão de Pessoas com filtros e busca."""
@@ -546,6 +559,7 @@ def _filtrar_por_status(qs, status_param, todos_param=False):
     return qs
 
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def api_pessoas_listar(request):
     """
@@ -598,6 +612,7 @@ def api_pessoas_listar(request):
     return JsonResponse({"sucesso": True, "total": len(dados), "registros": dados})
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_pessoas_salvar(request):
@@ -648,12 +663,16 @@ def api_pessoas_salvar(request):
             )
             msg = f"Pessoa '{pessoa.razao_social}' cadastrada com sucesso!"
 
+        # Registra mutação na sessão para sincronismo entre instâncias e abas
+        registrar_mutacao(request, 'PESSOA', pessoa)
+
         return JsonResponse({"sucesso": True, "mensagem": msg, "id": pessoa.id})
 
     except Exception as e:
         return JsonResponse({"sucesso": False, "erro": str(e)}, status=500)
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_pessoas_inativar(request, id):
@@ -664,6 +683,7 @@ def api_pessoas_inativar(request, id):
     """
     pessoa = get_object_or_404(Pessoas, id=id)
     pessoa.inativar()
+    registrar_mutacao(request, 'PESSOA', pessoa)
     return JsonResponse({
         "sucesso": True,
         "mensagem": f"Pessoa '{pessoa.razao_social}' inativada com sucesso!",
@@ -671,12 +691,14 @@ def api_pessoas_inativar(request, id):
     })
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_pessoas_reativar(request, id):
     """Regra de Negócio: Cadastros devem ser possível REATIVAR um registro INATIVO."""
     pessoa = get_object_or_404(Pessoas, id=id)
     pessoa.reativar()
+    registrar_mutacao(request, 'PESSOA', pessoa)
     return JsonResponse({
         "sucesso": True,
         "mensagem": f"Pessoa '{pessoa.razao_social}' reativada com sucesso!",
@@ -688,6 +710,7 @@ def api_pessoas_reativar(request, id):
 # CRUD: MANTER CLASSIFICAÇÃO (TIPO DE RECEITA / TIPO DE DESPESA)
 # ==============================================================================
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def classificacoes_view(request):
     """Renderiza a tela de gestão de Classificações."""
@@ -698,6 +721,7 @@ def classificacoes_view(request):
     return render(request, "extrator_fiscal/classificacoes.html", context)
 
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def api_classificacoes_listar(request):
     """Lista classificações de receitas e despesas com busca e filtro por status (Todos/Ativos/Inativos)."""
@@ -733,6 +757,7 @@ def api_classificacoes_listar(request):
     return JsonResponse({"sucesso": True, "total": len(dados), "registros": dados})
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_classificacoes_salvar(request):
@@ -767,18 +792,23 @@ def api_classificacoes_salvar(request):
             )
             msg = f"Classificação '{c.descricao}' criada com sucesso!"
 
+        # Registra mutação na sessão para sincronismo entre instâncias e abas
+        registrar_mutacao(request, 'CLASSIFICACAO', c)
+
         return JsonResponse({"sucesso": True, "mensagem": msg, "id": c.id})
 
     except Exception as e:
         return JsonResponse({"sucesso": False, "erro": str(e)}, status=500)
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_classificacoes_inativar(request, id):
     """Inativação lógica da classificação."""
     c = get_object_or_404(Classificacao, id=id)
     c.inativar()
+    registrar_mutacao(request, 'CLASSIFICACAO', c)
     return JsonResponse({
         "sucesso": True,
         "mensagem": f"Classificação '{c.descricao}' inativada com sucesso!",
@@ -786,12 +816,14 @@ def api_classificacoes_inativar(request, id):
     })
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_classificacoes_reativar(request, id):
     """Reativação da classificação."""
     c = get_object_or_404(Classificacao, id=id)
     c.reativar()
+    registrar_mutacao(request, 'CLASSIFICACAO', c)
     return JsonResponse({
         "sucesso": True,
         "mensagem": f"Classificação '{c.descricao}' reativada com sucesso!",
@@ -803,6 +835,7 @@ def api_classificacoes_reativar(request, id):
 # CRUD: REGISTRAR CONTAS A PAGAR & CONTAS A RECEBER
 # ==============================================================================
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def contas_pagar_view(request):
     """Renderiza a tela de gestão de Contas a Pagar."""
@@ -820,6 +853,7 @@ def contas_pagar_view(request):
     return render(request, "extrator_fiscal/contas_pagar.html", context)
 
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def contas_receber_view(request):
     """Renderiza a tela de gestão de Contas a Receber."""
@@ -891,16 +925,19 @@ def _listar_movimentos(request, tipo_movimento):
     return JsonResponse({"sucesso": True, "total": len(dados), "registros": dados})
 
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def api_contas_pagar_listar(request):
     return _listar_movimentos(request, 'APAGAR')
 
 
+@never_cache
 @login_required(login_url='extrator_fiscal:login')
 def api_contas_receber_listar(request):
     return _listar_movimentos(request, 'ARECEBER')
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_salvar_movimento(request, tipo_movimento):
@@ -1006,6 +1043,9 @@ def api_salvar_movimento(request, tipo_movimento):
                 status_pagamento='PENDENTE'
             )
 
+        # Registra mutação na sessão para sincronismo entre instâncias e abas
+        registrar_mutacao(request, 'MOVIMENTO', mov)
+
         return JsonResponse({"sucesso": True, "mensagem": msg, "id": mov.id})
 
     except Exception as e:
@@ -1013,24 +1053,28 @@ def api_salvar_movimento(request, tipo_movimento):
         return JsonResponse({"sucesso": False, "erro": str(e)}, status=500)
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_contas_pagar_salvar(request):
     return api_salvar_movimento(request, 'APAGAR')
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_contas_receber_salvar(request):
     return api_salvar_movimento(request, 'ARECEBER')
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_movimento_inativar(request, id):
     """Inativação lógica do Movimento e de suas Parcelas."""
     mov = get_object_or_404(MovimentoContas, id=id)
     mov.inativar()
+    registrar_mutacao(request, 'MOVIMENTO', mov)
     return JsonResponse({
         "sucesso": True,
         "mensagem": f"Movimento #{mov.id} inativado com sucesso!",
@@ -1038,12 +1082,14 @@ def api_movimento_inativar(request, id):
     })
 
 
+@never_cache
 @csrf_exempt
 @login_required(login_url='extrator_fiscal:login')
 def api_movimento_reativar(request, id):
     """Reativação lógica do Movimento e de suas Parcelas."""
     mov = get_object_or_404(MovimentoContas, id=id)
     mov.reativar()
+    registrar_mutacao(request, 'MOVIMENTO', mov)
     return JsonResponse({
         "sucesso": True,
         "mensagem": f"Movimento #{mov.id} reativado com sucesso!",
