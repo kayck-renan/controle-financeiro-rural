@@ -27,6 +27,7 @@ Desktop.ini
 # Temporary files
 *.zip
 *.log
+*.backup*
 
 # Vercel
 .vercel
