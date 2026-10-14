@@ -16,19 +16,27 @@
   <!-- Barra de Filtros e Busca (Página 4 do PDF) -->
   <div class="crud-toolbar">
     <div class="crud-search-group">
-      <input type="text" id="input-busca-pessoas" class="crud-search-input" placeholder="Buscar por Razão Social, Fantasia, CPF/CNPJ ou ID...">
-      <select id="select-filtro-tipo" class="crud-search-input" style="max-width: 170px;">
+      <input type="text" id="input-busca-pessoas" class="crud-search-input" placeholder="Buscar por Razão Social, Fantasia, CPF/CNPJ, Telefone ou ID..." style="flex:1; min-width:220px;">
+      
+      <select id="select-filtro-tipo" class="crud-search-input" style="max-width: 160px;" title="Filtrar por Tipo de Pessoa">
         <option value="">Todos os Tipos</option>
         <option value="FORNECEDOR">Fornecedor</option>
         <option value="CLIENTE">Cliente</option>
         <option value="FATURADO">Faturado</option>
         <option value="CLIENTE-FORNECEDOR">Cliente/Fornecedor</option>
       </select>
-      <button type="button" id="btn-buscar-pessoas" class="btn-crud-buscar">
+
+      <select id="select-filtro-status-pessoas" class="crud-search-input select-status-filter" style="max-width: 180px;" title="Filtrar por Status do Cadastro">
+        <option value="TODOS">Todos (Ativos + Inativos)</option>
+        <option value="ATIVO">Somente ativos</option>
+        <option value="INATIVO">Somente inativos</option>
+      </select>
+
+      <button type="button" id="btn-buscar-pessoas" class="btn-crud-buscar" title="Buscar com os filtros selecionados">
         🔍 Buscar
       </button>
-      <button type="button" id="btn-todos-pessoas" class="btn-crud-todos" title="Carrega todos com status = ATIVO">
-        📋 Todos (Ativos)
+      <button type="button" id="btn-todos-pessoas" class="btn-crud-todos" title="Carregar lista conforme o status selecionado">
+        📋 Listar Registros
       </button>
     </div>
 
@@ -60,7 +68,7 @@
           <tr>
             <td colspan="8" class="table-empty-state">
               <div class="table-empty-icon">👥</div>
-              <p>Tabela de registros vazia. Utilize a <strong>Busca</strong> ou clique em <strong>Todos (Ativos)</strong> para carregar os dados.</p>
+              <p>Tabela de registros vazia. Utilize a <strong>Busca</strong> ou escolha o status e clique em <strong>Listar Registros</strong> para carregar os dados.</p>
             </td>
           </tr>
         </tbody>
@@ -84,6 +92,12 @@
       <input type="hidden" id="pessoa-status" value="ATIVO">
 
       <div class="modal-body">
+        <!-- Banner de Registro Inativo com Ação de Reativação Direta -->
+        <div id="pessoa-status-banner" class="status-warning-banner hidden" style="margin-bottom:1rem; padding:0.65rem 0.9rem; border-radius:var(--radius-sm); background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239, 68, 68, 0.3); display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:#f87171; font-size:0.83rem; font-weight:500;">⚠️ Este cadastro está <strong>INATIVO</strong> no sistema.</span>
+          <button type="button" id="btn-modal-reativar-pessoa" class="btn-action-sm btn-reactivate" style="padding:0.25rem 0.65rem; font-weight:600;">🔄 Reativar Agora</button>
+        </div>
+
         <div class="form-group" style="margin-bottom:1rem;">
           <label for="pessoa-razao">Razão Social / Nome Completo *:</label>
           <input type="text" id="pessoa-razao" maxlength="255" class="crud-search-input" style="width:100%;" required placeholder="Ex: IGUAÇU MAQUINAS AGRICOLAS LTDA">
@@ -145,6 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnTodos = document.getElementById('btn-todos-pessoas');
   const inputBusca = document.getElementById('input-busca-pessoas');
   const selectTipo = document.getElementById('select-filtro-tipo');
+  const selectStatus = document.getElementById('select-filtro-status-pessoas');
 
   const modalPessoa = document.getElementById('modal-pessoa');
   const btnNovo = document.getElementById('btn-novo-pessoa');
@@ -153,6 +168,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const formPessoa = document.getElementById('form-pessoa');
   const btnSalvarPessoa = document.getElementById('btn-salvar-pessoa');
   const btnSalvarPessoaText = document.getElementById('btn-salvar-pessoa-text');
+  const pessoaStatusBanner = document.getElementById('pessoa-status-banner');
+  const btnModalReativar = document.getElementById('btn-modal-reativar-pessoa');
+
+  let currentEditingPessoa = null;
 
   const inputCpfCnpj = document.getElementById('pessoa-cpf-cnpj');
   const feedbackCpfCnpj = document.getElementById('feedback-cpf-cnpj');
@@ -183,15 +202,34 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function obterFiltrosAtuais(limparTermo = false) {
+    if (limparTermo) {
+      inputBusca.value = '';
+    }
+    const params = {};
+    if (selectStatus && selectStatus.value) {
+      params.status = selectStatus.value;
+    }
+    if (selectTipo && selectTipo.value) {
+      params.tipo = selectTipo.value;
+    }
+    const termo = inputBusca.value.trim();
+    if (termo) {
+      params.q = termo;
+    }
+    return params;
+  }
+
   // Carrega registros da API
   async function carregarPessoas(params = {}) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#64748b;">Carregando registros...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:2rem; color:#64748b;"><span class="spinner" style="margin-right:8px;"></span>Carregando registros...</td></tr>';
     const query = new URLSearchParams(params).toString();
     try {
       const res = await fetch(`/api/pessoas/listar/?${query}`);
       const data = await res.json();
       if (!data.registros || data.registros.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhum registro encontrado para os critérios informados.</p></td></tr>`;
+        const statusTexto = selectStatus ? selectStatus.options[selectStatus.selectedIndex].text : '';
+        tbody.innerHTML = `<tr><td colspan="8" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhum registro encontrado para os critérios informados (${statusTexto}).</p></td></tr>`;
         return;
       }
       renderTabela(data.registros);
@@ -230,22 +268,33 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnBuscar.addEventListener('click', () => {
-    carregarPessoas({ q: inputBusca.value.trim(), tipo: selectTipo.value });
+    carregarPessoas(obterFiltrosAtuais(false));
   });
 
   inputBusca.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      carregarPessoas({ q: inputBusca.value.trim(), tipo: selectTipo.value });
+      carregarPessoas(obterFiltrosAtuais(false));
     }
   });
 
   btnTodos.addEventListener('click', () => {
-    inputBusca.value = '';
-    selectTipo.value = '';
-    carregarPessoas({ todos: 'true' });
+    carregarPessoas(obterFiltrosAtuais(true));
   });
 
+  if (selectStatus) {
+    selectStatus.addEventListener('change', () => {
+      carregarPessoas(obterFiltrosAtuais(false));
+    });
+  }
+
+  if (selectTipo) {
+    selectTipo.addEventListener('change', () => {
+      carregarPessoas(obterFiltrosAtuais(false));
+    });
+  }
+
   btnNovo.addEventListener('click', () => {
+    currentEditingPessoa = null;
     document.getElementById('modal-pessoa-title').textContent = 'Inserir Nova Pessoa';
     document.getElementById('pessoa-id').value = '';
     document.getElementById('pessoa-razao').value = '';
@@ -258,6 +307,9 @@ document.addEventListener('DOMContentLoaded', () => {
       inputEmail.classList.remove('input-error', 'input-success');
     }
     document.getElementById('pessoa-status').value = 'ATIVO';
+    if (pessoaStatusBanner) {
+      pessoaStatusBanner.classList.add('hidden');
+    }
     if (feedbackCpfCnpj) feedbackCpfCnpj.innerHTML = '';
     if (feedbackEmail) feedbackEmail.innerHTML = '';
     inputCpfCnpj.classList.remove('input-error', 'input-success');
@@ -272,6 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCancelar.addEventListener('click', fecharModal);
 
   window.editarPessoa = (p) => {
+    currentEditingPessoa = p;
     document.getElementById('modal-pessoa-title').textContent = `Editar Pessoa #${p.id}`;
     document.getElementById('pessoa-id').value = p.id;
     document.getElementById('pessoa-razao').value = p.razao_social;
@@ -279,6 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('pessoa-cpf-cnpj').value = p.cpf_cnpj !== '-' ? p.cpf_cnpj : '';
     document.getElementById('pessoa-tipo').value = p.tipo;
     document.getElementById('pessoa-telefone').value = p.telefone !== '-' ? p.telefone : '';
+    document.getElementById('pessoa-status').value = p.status;
     if (inputEmail) {
       inputEmail.value = p.email !== '-' ? p.email : '';
       inputEmail.classList.remove('input-error', 'input-success');
@@ -294,8 +348,29 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.RuralValidators && inputEmail && inputEmail.value) {
       inputEmail.dispatchEvent(new Event('input'));
     }
+
+    if (pessoaStatusBanner) {
+      if (p.status === 'INATIVO') {
+        pessoaStatusBanner.classList.remove('hidden');
+      } else {
+        pessoaStatusBanner.classList.add('hidden');
+      }
+    }
+
     modalPessoa.classList.remove('hidden');
   };
+
+  if (btnModalReativar) {
+    btnModalReativar.addEventListener('click', async () => {
+      if (!currentEditingPessoa) return;
+      await window.reativarPessoa(currentEditingPessoa.id, currentEditingPessoa.razao_social);
+      currentEditingPessoa.status = 'ATIVO';
+      document.getElementById('pessoa-status').value = 'ATIVO';
+      if (pessoaStatusBanner) {
+        pessoaStatusBanner.classList.add('hidden');
+      }
+    });
+  }
 
   window.inativarPessoa = async (id, nome) => {
     if (!confirm(`Deseja realmente inativar (exclusão lógica) a pessoa "${nome}"?`)) return;
@@ -304,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.sucesso) {
         showToast(data.mensagem);
-        carregarPessoas({ todos: 'true' });
+        carregarPessoas(obterFiltrosAtuais(false));
       }
     } catch (e) {
       showToast('Erro ao inativar registro.');
@@ -317,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.sucesso) {
         showToast(data.mensagem);
-        carregarPessoas({ todos: 'true' });
+        carregarPessoas(obterFiltrosAtuais(false));
       }
     } catch (e) {
       showToast('Erro ao reativar registro.');

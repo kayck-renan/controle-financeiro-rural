@@ -18,7 +18,7 @@ O **Sistema de Controle Financeiro Rural** é uma solução ERP completa voltada
 * 📄 **Extrator Fiscal Inteligente (1ª Etapa):** Leitura de DANFE (PDF), extração de dados e classificação semântica nas 9 macrocategorias oficiais com a API Google Gemini (e motor local resiliente).
 * 🔍 **Análise e Consulta no Banco de Dados (2ª Etapa):** Ao concluir a extração da nota fiscal, o sistema consulta automaticamente se o **Fornecedor**, **Faturado** e a **Despesa** já existem no banco de dados e exibe o status em tela (`EXISTE – ID: XX` ou `NÃO EXISTE`).
 * 💾 **Lançamento Automático em 1 Clique (2ª Etapa):** Cria automaticamente novo fornecedor, faturado, despesa e registra o Movimento de Contas e suas Parcelas.
-* 👥 **Módulo Manter Pessoas:** Gestão completa de Fornecedores, Clientes e Faturados com busca multi-elemento, botão "Todos (Ativos)", exclusão lógica (inativação/reativação) e validação em tempo real de CPF/CNPJ e Telefone.
+* 👥 **Módulo Manter Pessoas:** Gestão completa de Fornecedores, Clientes e Faturados com busca multi-elemento, filtro de status em 3 estados (Todos, Somente ativos, Somente inativos), botão "Listar Registros", exclusão lógica (inativação/reativação) e validação em tempo real de CPF/CNPJ e Telefone.
 * 🏷️ **Módulo Manter Classificações:** Gestão das 9 macrocategorias de Despesas e Receitas rurais com limites de caracteres.
 * 💳 **Módulo Registrar Contas a Pagar & Contas a Receber:** Suporte a múltiplas classificações por movimento e parcelamento com datas de vencimento distintas.
 * 🌓 **Alternador de Tema (Modo Claro & Modo Escuro):** Botão intuitivo no cabeçalho com transições suaves e persistência da preferência do usuário via `localStorage`.
@@ -79,7 +79,7 @@ O **Sistema de Controle Financeiro Rural** é uma solução ERP completa voltada
 - Cadastro e edição de Fornecedores, Clientes e Faturados.
 - Regras de negócio da disciplina:
   - Tabela de registros inicia vazia.
-  - Carrega com busca multi-elemento ou botão **"Todos (Ativos)"** (`status = ATIVO`).
+  - Carrega com busca multi-elemento ou botão **"Listar Registros"** com filtro de status configurável (**Todos**, **Somente ativos** ou **Somente inativos**).
   - Cadastros nunca são excluídos fisicamente: apenas **INATIVADOS** (exclusão lógica).
   - É possível **REATIVAR** registros previamente inativados.
   - No CREATE: campo `status` oculto == `ATIVO`.

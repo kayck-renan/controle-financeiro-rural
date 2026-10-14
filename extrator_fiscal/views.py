@@ -528,13 +528,33 @@ def pessoas_view(request):
     return render(request, "extrator_fiscal/pessoas.html", context)
 
 
+def _filtrar_por_status(qs, status_param, todos_param=False):
+    """
+    Aplica filtro por status suportando 3 opções:
+    - 'TODOS' ou todos_param=True: exibe registros ativos e inativos
+    - 'ATIVO': exibe exclusivamente os registros ativos
+    - 'INATIVO': exibe exclusivamente os registros inativos
+    - Padrão (se não informado): exibe todos para garantir localização e usabilidade
+    """
+    st = (status_param or "").strip().upper()
+    if st == "ATIVO":
+        return qs.filter(status="ATIVO")
+    elif st == "INATIVO":
+        return qs.filter(status="INATIVO")
+    elif st == "TODOS" or todos_param:
+        return qs
+    return qs
+
+
 @login_required(login_url='extrator_fiscal:login')
 def api_pessoas_listar(request):
     """
     Retorna a lista de pessoas.
-    Regra de Layout:
-    - Se parâmetro 'todos=true', carrega status = ATIVO.
-    - Suporta busca multi-elemento (Razão Social, Nome Fantasia, CPF/CNPJ, E-mail, ID).
+    Filtro de Status:
+    - 'TODOS': exibe ativos e inativos.
+    - 'ATIVO': exibe somente ativos.
+    - 'INATIVO': exibe somente inativos.
+    Suporta busca multi-elemento (Razão Social, Nome Fantasia, CPF/CNPJ, E-mail, Telefone, ID).
     """
     termo = request.GET.get("q", "").strip()
     tipo = request.GET.get("tipo", "").strip()
@@ -542,11 +562,7 @@ def api_pessoas_listar(request):
     todos = request.GET.get("todos", "false").lower() == "true"
 
     qs = Pessoas.objects.all()
-
-    if todos:
-        qs = qs.filter(status="ATIVO")
-    elif status:
-        qs = qs.filter(status=status)
+    qs = _filtrar_por_status(qs, status, todos)
 
     if tipo:
         qs = qs.filter(tipo=tipo)
@@ -555,9 +571,13 @@ def api_pessoas_listar(request):
         filtro = Q(razao_social__icontains=termo) | \
                  Q(nome_fantasia__icontains=termo) | \
                  Q(cpf_cnpj__icontains=termo) | \
-                 Q(email__icontains=termo)
+                 Q(email__icontains=termo) | \
+                 Q(telefone__icontains=termo)
         if termo.isdigit():
             filtro |= Q(id=int(termo))
+        digitos = "".join([c for c in termo if c.isdigit()])
+        if digitos and len(digitos) >= 3 and digitos != termo:
+            filtro |= Q(cpf_cnpj__icontains=digitos) | Q(telefone__icontains=digitos)
         qs = qs.filter(filtro)
 
     dados = []
@@ -680,24 +700,23 @@ def classificacoes_view(request):
 
 @login_required(login_url='extrator_fiscal:login')
 def api_classificacoes_listar(request):
-    """Lista classificações de receitas e despesas com busca e filtro."""
+    """Lista classificações de receitas e despesas com busca e filtro por status (Todos/Ativos/Inativos)."""
     termo = request.GET.get("q", "").strip()
     tipo = request.GET.get("tipo", "").strip()
     status = request.GET.get("status", "").strip()
     todos = request.GET.get("todos", "false").lower() == "true"
 
     qs = Classificacao.objects.all()
-
-    if todos:
-        qs = qs.filter(status="ATIVO")
-    elif status:
-        qs = qs.filter(status=status)
+    qs = _filtrar_por_status(qs, status, todos)
 
     if tipo:
         qs = qs.filter(tipo=tipo)
 
     if termo:
-        qs = qs.filter(Q(descricao__icontains=termo) | Q(observacoes__icontains=termo))
+        filtro = Q(descricao__icontains=termo) | Q(observacoes__icontains=termo)
+        if termo.isdigit():
+            filtro |= Q(id=int(termo))
+        qs = qs.filter(filtro)
 
     dados = []
     for c in qs:
@@ -824,15 +843,14 @@ def _listar_movimentos(request, tipo_movimento):
     todos = request.GET.get("todos", "false").lower() == "true"
 
     qs = MovimentoContas.objects.filter(tipo=tipo_movimento).select_related('pessoa', 'faturado').prefetch_related('classificacoes', 'parcelas')
-
-    if todos:
-        qs = qs.filter(status="ATIVO")
-    elif status:
-        qs = qs.filter(status=status)
+    qs = _filtrar_por_status(qs, status, todos)
 
     if termo:
         filtro = Q(documento_numero__icontains=termo) | \
                  Q(pessoa__razao_social__icontains=termo) | \
+                 Q(pessoa__nome_fantasia__icontains=termo) | \
+                 Q(pessoa__cpf_cnpj__icontains=termo) | \
+                 Q(faturado__razao_social__icontains=termo) | \
                  Q(descricao__icontains=termo)
         if termo.isdigit():
             filtro |= Q(id=int(termo))

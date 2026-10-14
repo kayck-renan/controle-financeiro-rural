@@ -16,14 +16,22 @@
   <!-- Barra de Filtros e Busca -->
   <div class="crud-toolbar">
     <div class="crud-search-group">
-      <input type="text" id="input-busca-class" class="crud-search-input" placeholder="Buscar por descrição ou detalhes...">
-      <select id="select-filtro-tipo-class" class="crud-search-input" style="max-width: 150px;">
+      <input type="text" id="input-busca-class" class="crud-search-input" placeholder="Buscar por descrição, observações ou ID..." style="flex:1; min-width:200px;">
+      
+      <select id="select-filtro-tipo-class" class="crud-search-input" style="max-width: 150px;" title="Filtrar por Tipo">
         <option value="">Todos os Tipos</option>
         <option value="DESPESA">Despesas</option>
         <option value="RECEITA">Receitas</option>
       </select>
-      <button type="button" id="btn-buscar-class" class="btn-sm btn-primary">Buscar</button>
-      <button type="button" id="btn-todos-class" class="btn-sm btn-secondary" title="Carrega todos com status = ATIVO">Todos (Ativos)</button>
+
+      <select id="select-filtro-status-class" class="crud-search-input select-status-filter" style="max-width: 180px;" title="Filtrar por Status da Classificação">
+        <option value="TODOS">Todos (Ativos + Inativos)</option>
+        <option value="ATIVO">Somente ativos</option>
+        <option value="INATIVO">Somente inativos</option>
+      </select>
+
+      <button type="button" id="btn-buscar-class" class="btn-sm btn-primary" title="Buscar com os filtros selecionados">Buscar</button>
+      <button type="button" id="btn-todos-class" class="btn-sm btn-secondary" title="Carregar lista conforme o status selecionado">Listar Registros</button>
     </div>
 
     <div>
@@ -52,7 +60,7 @@
           <tr>
             <td colspan="6" class="table-empty-state">
               <div class="table-empty-icon">🏷️</div>
-              <p>Tabela de classificações vazia. Utilize a <strong>Busca</strong> ou clique em <strong>Todos (Ativos)</strong> para carregar os registros.</p>
+              <p>Tabela de classificações vazia. Utilize a <strong>Busca</strong> ou escolha o status e clique em <strong>Listar Registros</strong>.</p>
             </td>
           </tr>
         </tbody>
@@ -74,6 +82,12 @@
       <input type="hidden" id="class-status" value="ATIVO">
 
       <div class="modal-body">
+        <!-- Banner de Registro Inativo com Ação de Reativação Direta -->
+        <div id="class-status-banner" class="status-warning-banner hidden" style="margin-bottom:1rem; padding:0.65rem 0.9rem; border-radius:var(--radius-sm); background:rgba(239, 68, 68, 0.12); border:1px solid rgba(239, 68, 68, 0.3); display:flex; justify-content:space-between; align-items:center;">
+          <span style="color:#f87171; font-size:0.83rem; font-weight:500;">⚠️ Esta classificação está <strong>INATIVA</strong> no sistema.</span>
+          <button type="button" id="btn-modal-reativar-class" class="btn-action-sm btn-reactivate" style="padding:0.25rem 0.65rem; font-weight:600;">🔄 Reativar Agora</button>
+        </div>
+
         <div class="form-group" style="margin-bottom:1rem;">
           <label for="class-desc">Descrição da Classificação *:</label>
           <input type="text" id="class-desc" maxlength="100" class="crud-search-input" style="width:100%;" required placeholder="Ex: MANUTENÇÃO E OPERAÇÃO">
@@ -110,21 +124,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnTodos = document.getElementById('btn-todos-class');
   const inputBusca = document.getElementById('input-busca-class');
   const selectTipo = document.getElementById('select-filtro-tipo-class');
+  const selectStatus = document.getElementById('select-filtro-status-class');
 
   const modalClass = document.getElementById('modal-class');
   const btnNovo = document.getElementById('btn-novo-class');
   const btnCloseModal = document.getElementById('btn-close-modal-class');
   const btnCancelar = document.getElementById('btn-cancelar-class');
   const formClass = document.getElementById('form-class');
+  const classStatusBanner = document.getElementById('class-status-banner');
+  const btnModalReativar = document.getElementById('btn-modal-reativar-class');
+
+  let currentEditingClass = null;
+
+  function obterFiltrosAtuais(limparTermo = false) {
+    if (limparTermo) {
+      inputBusca.value = '';
+    }
+    const params = {};
+    if (selectStatus && selectStatus.value) {
+      params.status = selectStatus.value;
+    }
+    if (selectTipo && selectTipo.value) {
+      params.tipo = selectTipo.value;
+    }
+    const termo = inputBusca.value.trim();
+    if (termo) {
+      params.q = termo;
+    }
+    return params;
+  }
 
   async function carregarClassificacoes(params = {}) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#64748b;">Carregando registros...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#64748b;"><span class="spinner" style="margin-right:8px;"></span>Carregando registros...</td></tr>';
     const query = new URLSearchParams(params).toString();
     try {
       const res = await fetch(`/api/classificacoes/listar/?${query}`);
       const data = await res.json();
       if (!data.registros || data.registros.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhuma classificação encontrada para os critérios informados.</p></td></tr>`;
+        const statusTexto = selectStatus ? selectStatus.options[selectStatus.selectedIndex].text : '';
+        tbody.innerHTML = `<tr><td colspan="6" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhuma classificação encontrada para os critérios informados (${statusTexto}).</p></td></tr>`;
         return;
       }
       renderTabela(data.registros);
@@ -166,28 +204,42 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnBuscar.addEventListener('click', () => {
-    carregarClassificacoes({ q: inputBusca.value.trim(), tipo: selectTipo.value });
+    carregarClassificacoes(obterFiltrosAtuais(false));
   });
 
   inputBusca.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      carregarClassificacoes({ q: inputBusca.value.trim(), tipo: selectTipo.value });
+      carregarClassificacoes(obterFiltrosAtuais(false));
     }
   });
 
   btnTodos.addEventListener('click', () => {
-    inputBusca.value = '';
-    selectTipo.value = '';
-    carregarClassificacoes({ todos: 'true' });
+    carregarClassificacoes(obterFiltrosAtuais(true));
   });
 
+  if (selectStatus) {
+    selectStatus.addEventListener('change', () => {
+      carregarClassificacoes(obterFiltrosAtuais(false));
+    });
+  }
+
+  if (selectTipo) {
+    selectTipo.addEventListener('change', () => {
+      carregarClassificacoes(obterFiltrosAtuais(false));
+    });
+  }
+
   btnNovo.addEventListener('click', () => {
+    currentEditingClass = null;
     document.getElementById('modal-class-title').textContent = 'Inserir Nova Classificação';
     document.getElementById('class-id').value = '';
     document.getElementById('class-desc').value = '';
     document.getElementById('class-tipo').value = 'DESPESA';
     document.getElementById('class-obs').value = '';
     document.getElementById('class-status').value = 'ATIVO';
+    if (classStatusBanner) {
+      classStatusBanner.classList.add('hidden');
+    }
     modalClass.classList.remove('hidden');
   });
 
@@ -198,13 +250,35 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCancelar.addEventListener('click', fecharModal);
 
   window.editarClassificacao = (c) => {
+    currentEditingClass = c;
     document.getElementById('modal-class-title').textContent = `Editar Classificação #${c.id}`;
     document.getElementById('class-id').value = c.id;
     document.getElementById('class-desc').value = c.descricao;
     document.getElementById('class-tipo').value = c.tipo;
     document.getElementById('class-obs').value = c.observacoes !== '-' ? c.observacoes : '';
+    document.getElementById('class-status').value = c.status;
+
+    if (classStatusBanner) {
+      if (c.status === 'INATIVO') {
+        classStatusBanner.classList.remove('hidden');
+      } else {
+        classStatusBanner.classList.add('hidden');
+      }
+    }
     modalClass.classList.remove('hidden');
   };
+
+  if (btnModalReativar) {
+    btnModalReativar.addEventListener('click', async () => {
+      if (!currentEditingClass) return;
+      await window.reativarClassificacao(currentEditingClass.id, currentEditingClass.descricao);
+      currentEditingClass.status = 'ATIVO';
+      document.getElementById('class-status').value = 'ATIVO';
+      if (classStatusBanner) {
+        classStatusBanner.classList.add('hidden');
+      }
+    });
+  }
 
   window.inativarClassificacao = async (id, desc) => {
     if (!confirm(`Deseja inativar a classificação "${desc}"?`)) return;
@@ -213,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.sucesso) {
         showToast(data.mensagem);
-        carregarClassificacoes({ todos: 'true' });
+        carregarClassificacoes(obterFiltrosAtuais(false));
       }
     } catch (e) {
       showToast('Erro ao inativar registro.');
@@ -226,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.sucesso) {
         showToast(data.mensagem);
-        carregarClassificacoes({ todos: 'true' });
+        carregarClassificacoes(obterFiltrosAtuais(false));
       }
     } catch (e) {
       showToast('Erro ao reativar registro.');
@@ -240,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
       descricao: document.getElementById('class-desc').value.trim(),
       tipo: document.getElementById('class-tipo').value,
       observacoes: document.getElementById('class-obs').value.trim(),
-      status: 'ATIVO'
+      status: document.getElementById('class-status').value || 'ATIVO'
     };
 
     try {
@@ -253,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.sucesso) {
         showToast(data.mensagem);
         fecharModal();
-        carregarClassificacoes({ todos: 'true' });
+        carregarClassificacoes(obterFiltrosAtuais(false));
       } else {
         alert(data.erro || 'Falha ao salvar');
       }

@@ -16,9 +16,16 @@
   <!-- Barra de Filtros e Busca -->
   <div class="crud-toolbar">
     <div class="crud-search-group">
-      <input type="text" id="input-busca-pagar" class="crud-search-input" placeholder="Buscar por documento, fornecedor ou descrição...">
-      <button type="button" id="btn-buscar-pagar" class="btn-sm btn-primary">Buscar</button>
-      <button type="button" id="btn-todos-pagar" class="btn-sm btn-secondary" title="Carrega todos com status = ATIVO">Todos (Ativos)</button>
+      <input type="text" id="input-busca-pagar" class="crud-search-input" placeholder="Buscar por documento, fornecedor, faturado ou ID..." style="flex:1; min-width:220px;">
+      
+      <select id="select-filtro-status-pagar" class="crud-search-input select-status-filter" style="max-width: 180px;" title="Filtrar por Status da Conta a Pagar">
+        <option value="TODOS">Todos (Ativos + Inativos)</option>
+        <option value="ATIVO">Somente ativos</option>
+        <option value="INATIVO">Somente inativos</option>
+      </select>
+
+      <button type="button" id="btn-buscar-pagar" class="btn-sm btn-primary" title="Buscar com os filtros selecionados">Buscar</button>
+      <button type="button" id="btn-todos-pagar" class="btn-sm btn-secondary" title="Carregar lista conforme o status selecionado">Listar Registros</button>
     </div>
 
     <div>
@@ -51,7 +58,7 @@
           <tr>
             <td colspan="10" class="table-empty-state">
               <div class="table-empty-icon">💳</div>
-              <p>Tabela de contas a pagar vazia. Utilize a <strong>Busca</strong> ou clique em <strong>Todos (Ativos)</strong> para carregar os registros.</p>
+              <p>Tabela de contas a pagar vazia. Utilize a <strong>Busca</strong> ou escolha o status e clique em <strong>Listar Registros</strong>.</p>
             </td>
           </tr>
         </tbody>
@@ -160,6 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnBuscar = document.getElementById('btn-buscar-pagar');
   const btnTodos = document.getElementById('btn-todos-pagar');
   const inputBusca = document.getElementById('input-busca-pagar');
+  const selectStatus = document.getElementById('select-filtro-status-pagar');
 
   const modalPagar = document.getElementById('modal-pagar');
   const btnNovo = document.getElementById('btn-novo-pagar');
@@ -167,14 +175,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnCancelar = document.getElementById('btn-cancelar-pagar');
   const formPagar = document.getElementById('form-pagar');
 
+  function obterFiltrosAtuais(limparTermo = false) {
+    if (limparTermo) {
+      inputBusca.value = '';
+    }
+    const params = {};
+    if (selectStatus && selectStatus.value) {
+      params.status = selectStatus.value;
+    }
+    const termo = inputBusca.value.trim();
+    if (termo) {
+      params.q = termo;
+    }
+    return params;
+  }
+
   async function carregarContasPagar(params = {}) {
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:#64748b;">Carregando registros...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:2rem; color:#64748b;"><span class="spinner" style="margin-right:8px;"></span>Carregando registros...</td></tr>';
     const query = new URLSearchParams(params).toString();
     try {
       const res = await fetch(`/api/contas-a-pagar/listar/?${query}`);
       const data = await res.json();
       if (!data.registros || data.registros.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="10" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhum registro de conta a pagar encontrado.</p></td></tr>`;
+        const statusTexto = selectStatus ? selectStatus.options[selectStatus.selectedIndex].text : '';
+        tbody.innerHTML = `<tr><td colspan="10" class="table-empty-state"><div class="table-empty-icon">🔍</div><p>Nenhum registro de conta a pagar encontrado (${statusTexto}).</p></td></tr>`;
         return;
       }
       renderTabela(data.registros);
@@ -214,19 +238,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   btnBuscar.addEventListener('click', () => {
-    carregarContasPagar({ q: inputBusca.value.trim() });
+    carregarContasPagar(obterFiltrosAtuais(false));
   });
 
   inputBusca.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
-      carregarContasPagar({ q: inputBusca.value.trim() });
+      carregarContasPagar(obterFiltrosAtuais(false));
     }
   });
 
   btnTodos.addEventListener('click', () => {
-    inputBusca.value = '';
-    carregarContasPagar({ todos: 'true' });
+    carregarContasPagar(obterFiltrosAtuais(true));
   });
+
+  if (selectStatus) {
+    selectStatus.addEventListener('change', () => {
+      carregarContasPagar(obterFiltrosAtuais(false));
+    });
+  }
 
   btnNovo.addEventListener('click', () => {
     document.getElementById('pagar-id').value = '';
@@ -257,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.sucesso) {
         showToast(data.mensagem);
-        carregarContasPagar({ todos: 'true' });
+        carregarContasPagar(obterFiltrosAtuais(false));
       }
     } catch (e) {
       showToast('Erro ao inativar registro.');
@@ -270,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.sucesso) {
         showToast(data.mensagem);
-        carregarContasPagar({ todos: 'true' });
+        carregarContasPagar(obterFiltrosAtuais(false));
       }
     } catch (e) {
       showToast('Erro ao reativar registro.');
