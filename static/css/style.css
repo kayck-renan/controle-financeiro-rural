@@ -349,6 +349,181 @@ a {
   color: var(--text-secondary);
 }
 
+/* 5.1. WIDGET DA ÚLTIMA ATUALIZAÇÃO NO GITHUB */
+.github-update-widget {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1.1rem;
+  margin-bottom: 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s ease;
+}
+
+.github-update-widget:hover {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.github-update-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.github-icon-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background-color: var(--primary-subtle);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.github-update-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.github-update-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+}
+
+.github-update-label {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.github-commit-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.12rem 0.5rem;
+  background-color: var(--bg-app);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.github-commit-pill:hover {
+  background-color: var(--primary-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.github-commit-pill.error {
+  color: var(--warning);
+  border-color: rgba(245, 158, 11, 0.3);
+  background-color: rgba(245, 158, 11, 0.08);
+}
+
+.github-update-date {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.github-update-fallback-note {
+  font-size: 0.75rem;
+  color: var(--warning);
+  font-style: italic;
+}
+
+.github-update-message {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 650px;
+}
+
+.github-update-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-github-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--bg-app);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-github-action:hover {
+  color: var(--text-main);
+  border-color: var(--text-secondary);
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.btn-github-refresh {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-github-refresh:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-github-refresh.spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .github-update-widget {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .github-update-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .github-update-message {
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
 /* 6. CARDS DE INDICADORES (METRIC-GRID) */
 .metric-grid {
   display: grid;

@@ -19,6 +19,7 @@ urlpatterns = [
     path("api/extrair-nf/", views.extrair_dados, name="extrair_dados"),
     path("api/exemplo/download/", views.download_exemplo, name="download_exemplo"),
     path("api/status/", views.status_api, name="status_api"),
+    path("api/github-commit/", views.api_github_commit, name="api_github_commit"),
 
     # Etapa 2: Consulta e Lançamento de Movimentos
     path("api/consultar-entidades/", views.consultar_entidades_api, name="consultar_entidades_api"),

@@ -618,4 +618,54 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => toast.classList.add('hidden'), 300);
     }, 3500);
   };
+
+  // =========================================================================
+  // ATUALIZAÇÃO DO STATUS DO GITHUB SOB DEMANDA
+  // =========================================================================
+  const btnRefreshCommit = document.getElementById('btn-refresh-github-commit');
+  if (btnRefreshCommit) {
+    btnRefreshCommit.addEventListener('click', async () => {
+      btnRefreshCommit.classList.add('spinning');
+      btnRefreshCommit.setAttribute('disabled', 'true');
+      try {
+        const res = await fetch('/api/github-commit/?refresh=true');
+        const data = await res.json();
+
+        const hashEl = document.getElementById('github-commit-hash');
+        const dateEl = document.getElementById('github-commit-date');
+        const msgEl = document.getElementById('github-commit-msg');
+        const pillEl = document.getElementById('github-commit-pill');
+        const fallbackNote = document.getElementById('github-fallback-note');
+
+        if (hashEl) hashEl.textContent = `#${data.git_commit_hash}`;
+        if (dateEl) dateEl.textContent = `em ${data.git_commit_date}`;
+        if (msgEl) {
+          msgEl.textContent = data.git_commit_message || 'Atualização recente no repositório.';
+          msgEl.setAttribute('title', data.git_commit_message || '');
+        }
+        if (pillEl) {
+          pillEl.setAttribute('href', data.git_commit_url || data.git_repo_url);
+          if (data.git_sucesso) {
+            pillEl.classList.remove('error');
+            if (fallbackNote) fallbackNote.style.display = 'none';
+          } else {
+            pillEl.classList.add('error');
+            if (fallbackNote) {
+              fallbackNote.textContent = `(${data.git_erro_msg || 'Dados locais'})`;
+              fallbackNote.style.display = 'inline';
+            }
+          }
+        }
+        showToast(data.git_sucesso ? 'Dados do GitHub atualizados com sucesso!' : 'Status do GitHub recarregado.');
+      } catch (err) {
+        showToast('Não foi possível sincronizar com o GitHub no momento.');
+      } finally {
+        setTimeout(() => {
+          btnRefreshCommit.classList.remove('spinning');
+          btnRefreshCommit.removeAttribute('disabled');
+        }, 400);
+      }
+    });
+  }
 });
+

@@ -1,6 +1,7 @@
 {
-  "commit_hash": "0d8427b",
-  "commit_date": "13/10/2026 10:02",
+  "commit_hash": "1e38504",
+  "commit_date": "13/10/2026 às 16:37",
+  "commit_message": "fix: declaracao da variavel inputEmail em pessoas.html e documentacao dos links oficiais no README",
   "repo_url": "https://github.com/kayck-renan/controle-financeiro-rural",
-  "version": "Etapa 2"
+  "version": "N2 - Etapa 2"
 }

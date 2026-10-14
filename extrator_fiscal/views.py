@@ -1043,3 +1043,15 @@ def status_api(request):
         "etapa": "2 - Manter Pessoas, Classificações, Contas e Integração Fiscal",
         "gemini_configurado": tem_chave,
     })
+
+
+def api_github_commit(request):
+    """
+    Retorna os dados da última atualização disponível no GitHub em formato JSON.
+    Aceita o parâmetro ?refresh=true para forçar a revalidação imediata junto ao GitHub.
+    """
+    from .context_processors import obter_info_commit_github
+    forcar = request.GET.get("refresh", "").lower() == "true"
+    dados = obter_info_commit_github(forcar_atualizacao=forcar)
+    return JsonResponse(dados)
+
